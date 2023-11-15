@@ -4,7 +4,7 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ![demo](images/demo.gif)
 
-This plugin uses (NormXU's nougat-latex-ocr)[https://github.com/NormXU/nougat-latex-ocr] model. Massive thanks to them for providing the open source model.
+This plugin uses [NormXU's nougat-latex-ocr](https://github.com/NormXU/nougat-latex-ocr) model. Massive thanks to them for providing the open source model.
 
 Note this plugin is in ALPHA and currently more of a proof of concept. Please raise any issues you may find with the plugin using the issues tab on Github.
 
