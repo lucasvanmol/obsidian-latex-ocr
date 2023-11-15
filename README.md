@@ -68,6 +68,12 @@ Note that the first time you do this, the model needs to be downloaded from hugg
 
 ## Development
 
+### How this plugin works
+
+This plugin consists of two main parts. The first is `latex_ocr`, a python script that downloads and runs the model using huggingface transformers and pytorch. This script interfaces with the javascript plugin using protocol buffers, allowing the plugin to communicate and make requests to the python script.
+
+The reason for this is that loading the model takes some time. This setup allows the model to be loaded in the background, making subsequent requests much faster.
+
 ### Getting started
 
 - Install NodeJS, then run `npm i` or `yarn` in the command line under the repo folder.
