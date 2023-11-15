@@ -1,34 +1,107 @@
-# Obsidian Sample Plugin
+# Latex OCR for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Generate Latex equations from images and screenshots inside your vault.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+![demo](images/demo.gif)
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+This plugin uses (NormXU's nougat-latex-ocr)[https://github.com/NormXU/nougat-latex-ocr] model. Massive thanks to them for providing the open source model.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+Note this plugin is in ALPHA and currently more of a proof of concept. Please raise any issues you may find with the plugin using the issues tab on Github.
 
-## First time developing plugins?
+## Manual installation
 
-Quick starting guide for new plugin devs:
+This project requires [python](https://www.python.org/) to be installed, including a number of python packages. If you don't want your python installation to be polluted, feel free to use a virtual environment for this purpose.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
+### Copy files
+
+- Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
+- Copy over `main.js`, `styles.css`, `manifest.json`, `latex_ocr` to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
+
+### Setup Python environemnt
+
+First navigate to `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
+
+#### Using a Virtual Environment (optional)
+
+If you wish, create a [virtual environment](https://docs.python.org/3/library/venv.html)
+
+In Windows this could look like:
+```
+python -m venv .env
+.env\Scripts\activate
+```
+
+Note that this python installation must then be set in the plugin settings. The python executable will usually be in 
+
+```
+C:\path\to\your\VaultFolder\.obsidian\plugins\obsidian-latex-ocr\.env\python.exe
+```
+
+#### Install packages
+
+If you wish to use GPU for inference (requires CUDA):
+
+```
+pip install -r ./latex_ocr/requirements_gpu.txt
+```
+If you get an error message installing torch this way, refer to
+`https://pytorch.org/get-started/locally/` to install it seperately. It may look something like `pip install torch --index-url https://download.pytorch.org/whl/cu118`
+
+otherwise:
+
+```
+pip install -r ./latex_ocr/requirements_cpu.txt
+```
+
+### Configuration
+
+Open Obsidian and navigate to the Community Plugins section and enable the plugin. Then head to the LatexOCR settings tab to configure it.
+
+![settings](images/settings.png)
+
+You will first need to set the python path that the plugin will use to run the model in the LatexOCR settings. You can then check if it's working using the button below it. Once this is done, press "(Re)start Server".
+
+Note that the first time you do this, the model needs to be downloaded from huggingface, and is around ~1.4 GB. You can check the status of this download in the LatexOCR settings tab by pressing "Check Status".
+
+---
+
+## Development
+
+### Getting started
+
+- Install NodeJS, then run `npm i` or `yarn` in the command line under the repo folder.
+- Install the required python packages
+  - `pip install requirements_cpu.txt` or `pip install requirements_gpu.txt`
+- Run `npm run dev` to compile the plugin from `main.ts` to `main.js`.
 - Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
+- Reload Obsidian to load the new version of the plugin.
 - Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+- For updates to the Obsidian API run `npm update` in the command line under the repo folder.
 
-## Releasing new releases
+### ESLint
+- To use eslint with this project, make sure to install eslint from terminal:
+  - `npm install -g eslint`
+- To use eslint to analyze this project use this command:
+  - `eslint main.ts`
+  - eslint will then create a report with suggestions for code improvement by file and line number.
+- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
+  - `eslint .\src\`
+
+### Using protoc
+
+```
+python -m grpc_tools.protoc -I./protos --python_out=. --pyi_out=. --grpc_python_out=. service.proto
+```
+
+```
+node .\node_modules\@grpc\proto-loader\build\bin\proto-loader-gen-types.js
+```
+
+### API Documentation
+
+See https://github.com/obsidianmd/obsidian-api
+
+### Releasing new releases
 
 - Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
 - Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
@@ -39,58 +112,3 @@ Quick starting guide for new plugin devs:
 > You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
 > The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
 
-## Adding your plugin to the community plugin list
-
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api

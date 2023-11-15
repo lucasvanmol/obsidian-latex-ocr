@@ -1,0 +1,3 @@
+[submodule "latex_ocr/nougat_latex_ocr"]
+	path = latex_ocr/nougat_latex_ocr
+	url = https://github.com/NormXU/nougat-latex-ocr.git

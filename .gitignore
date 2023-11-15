@@ -20,3 +20,10 @@ data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# Python venv
+.env
+
+# caches
+model_cache
+__pycache__

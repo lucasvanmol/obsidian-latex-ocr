@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-latex-ocr",
 	"version": "1.0.0",
 	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
@@ -12,6 +12,7 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/dropzone": "^5.7.6",
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
@@ -20,5 +21,11 @@
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"@grpc/grpc-js": "^1.9.9",
+		"@grpc/proto-loader": "^0.7.10",
+		"@xenova/transformers": "^2.7.0",
+		"clipboardy": "^4.0.0"
 	}
 }
