@@ -15,6 +15,7 @@ This project requires [python](https://www.python.org/) to be installed, includi
 ### Copy files
 
 - Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
+- Download the zip folder from the "Releases" tab
 - Copy over `main.js`, `styles.css`, `manifest.json`, `latex_ocr` to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
 
 ### Setup Python environemnt
