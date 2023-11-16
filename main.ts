@@ -1,6 +1,12 @@
 /* TODO:
 - add functionality to insert latex directly from clipboard
 - add check to see if GPU is being used
+- add command to start server
+- status bar on bottom right
+	- 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
+		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+	- https://docs.obsidian.md/Plugins/User+interface/Status+bar
+- allow pasting images in modal
 */
 
 import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, FileSystemAdapter, normalizePath } from 'obsidian';
