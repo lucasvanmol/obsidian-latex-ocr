@@ -18,6 +18,8 @@ This project requires [python](https://www.python.org/) to be installed, includi
 - Download the zip folder from the "Releases" tab
 - Copy over `main.js`, `styles.css`, `manifest.json`, `latex_ocr` to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
 
+Instead of manually downloading and copying files like this, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat). You'll still need to configure your Python environment.
+
 ### Setup Python environemnt
 
 First navigate to `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
