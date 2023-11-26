@@ -1,5 +1,5 @@
-import service_pb2_grpc
-import service_pb2
+import protos.latex_ocr_pb2_grpc
+import protos.latex_ocr_pb2
 import grpc
 import torch
 from PIL import Image
@@ -10,6 +10,7 @@ from nougat_latex_ocr.nougat_latex import NougatLaTexProcessor
 import argparse
 from concurrent import futures
 import logging
+import threading
 
 def parse_option():
     parser = argparse.ArgumentParser(prog="Latex OCR Server", description="A server that translates paths to images of equations to latex using protocol buffers.")
@@ -17,26 +18,31 @@ def parse_option():
     parser.add_argument("--cache_dir", default=None, help="path to model cache")
     return parser.parse_args()
 
-class LatexOCR(service_pb2_grpc.LatexOCRServicer):
+class LatexOCR(protos.latex_ocr_pb2_grpc.LatexOCRServicer):
     def __init__(self, model, cache_dir, device):
         self.device = device
+        self.cache_dir = cache_dir
+        self.model = None
+        self.tokenizer = None
+        self.latex_processor = None
 
-        print("Loading model...", end="", flush=True)
-        self.model = VisionEncoderDecoderModel.from_pretrained(model, cache_dir=cache_dir, resume_download=True).to(device)
-        print(" done", flush=True)
-
-        print("Loading processor...", end="", flush=True)
-        self.tokenizer = NougatTokenizerFast.from_pretrained(model, cache_dir=cache_dir, resume_download=True)
-        self.latex_processor = NougatLaTexProcessor.from_pretrained(model, cache_dir=cache_dir, resume_download=True)
-        print(" done", flush=True)
-
+        self.load_thread = threading.Thread(target=self.load_models, args=(model,))
+        print("Server started")
+        self.load_thread.start()
 
     def GenerateLatex(self, request, context):
         image = Image.open(request.image_path)
         if not image.mode == "RGB":
             image = image.convert('RGB')
         result = self.inference(image)
-        return service_pb2.LatexReply(latex=result)
+        return protos.latex_ocr_pb2.LatexReply(latex=result)
+    
+    def IsReady(self, request, context):
+        is_ready = not self.load_thread.is_alive()
+        return protos.latex_ocr_pb2.ServerIsReadyReply(is_ready=is_ready)
+    
+    def GetConfig(self, request, context):
+        return protos.latex_ocr_pb2.ServerConfig(device = self.device, cache_dir=self.cache_dir)
     
     def inference(self, image):
         pixel_values = self.latex_processor(image, return_tensors="pt").pixel_values
@@ -58,6 +64,15 @@ class LatexOCR(service_pb2_grpc.LatexOCRServicer):
         sequence = sequence.replace(self.tokenizer.eos_token, "").replace(self.tokenizer.pad_token, "").replace(self.tokenizer.bos_token,"")
         return process_raw_latex_code(sequence)
 
+    def load_models(self, model):
+        print("Loading model...", end="")
+        self.model = VisionEncoderDecoderModel.from_pretrained(model, cache_dir=self.cache_dir, resume_download=True).to(self.device)
+        print(" done")
+
+        print("Loading processor...", end="")
+        self.tokenizer = NougatTokenizerFast.from_pretrained(model, cache_dir=self.cache_dir, resume_download=True)
+        self.latex_processor = NougatLaTexProcessor.from_pretrained(model, cache_dir=self.cache_dir, resume_download=True)
+        print(" done")
 
 
 def serve(port: str, cache_dir: str):
@@ -67,7 +82,7 @@ def serve(port: str, cache_dir: str):
         device = torch.device("cpu")
     print(f"Starting server on port {port}, using {device}", flush=True)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    service_pb2_grpc.add_LatexOCRServicer_to_server(LatexOCR("Norm/nougat-latex-base", cache_dir, device), server)
+    protos.latex_ocr_pb2_grpc.add_LatexOCRServicer_to_server(LatexOCR("Norm/nougat-latex-base", cache_dir, device), server)
     server.add_insecure_port("[::]:" + port)
     server.start()
     server.wait_for_termination()

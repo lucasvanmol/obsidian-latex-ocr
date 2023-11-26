@@ -1,4 +1,4 @@
-// Original file: protos/service.proto
+// Original file: latex_ocr/protos/latex_ocr.proto
 
 
 export interface LatexRequest {
@@ -6,5 +6,5 @@ export interface LatexRequest {
 }
 
 export interface LatexRequest__Output {
-  'imagePath': (string);
+  'imagePath'?: (string);
 }

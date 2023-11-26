@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package latexocr;
+
+// Interface exported by the server
+service LatexOCR {
+  // Generate the latex code for a given image filepath
+  rpc GenerateLatex(LatexRequest) returns (LatexReply) {}
+
+  // Check if the server is ready to return requests
+  rpc IsReady(Empty) returns (ServerIsReadyReply) {}
+
+  // Get the server config
+  rpc GetConfig(Empty) returns (ServerConfig) {}
+}
+
+// The filepath for an image
+message LatexRequest { string image_path = 1; }
+
+// The latex code returned by the model
+message LatexReply { string latex = 1; }
+
+// Whether the server is ready to process requests
+message ServerIsReadyReply { bool is_ready = 1; }
+
+// Server Configuration
+message ServerConfig {
+  string device = 1;
+  string cache_dir = 2;
+}
+
+message Empty {}

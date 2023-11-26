@@ -1,4 +1,4 @@
-// Original file: protos/service.proto
+// Original file: latex_ocr/protos/latex_ocr.proto
 
 
 export interface LatexReply {
@@ -6,5 +6,5 @@ export interface LatexReply {
 }
 
 export interface LatexReply__Output {
-  'latex': (string);
+  'latex'?: (string);
 }

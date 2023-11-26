@@ -9,9 +9,12 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 
 export interface ProtoGrpcType {
   latexocr: {
+    Empty: MessageTypeDefinition
     LatexOCR: SubtypeConstructor<typeof grpc.Client, _latexocr_LatexOCRClient> & { service: _latexocr_LatexOCRDefinition }
     LatexReply: MessageTypeDefinition
     LatexRequest: MessageTypeDefinition
+    ServerConfig: MessageTypeDefinition
+    ServerIsReadyReply: MessageTypeDefinition
   }
 }
 

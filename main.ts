@@ -1,5 +1,4 @@
 /* TODO:
-- add functionality to insert latex directly from clipboard
 - add check to see if GPU is being used
 - add command to start server
 - status bar on bottom right
@@ -9,13 +8,14 @@
 - allow pasting images in modal
 */
 
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, FileSystemAdapter, normalizePath } from 'obsidian';
+import { App, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, FileSystemAdapter, normalizePath, Editor } from 'obsidian';
 import { ChildProcess, spawn } from 'child_process';
 import clipboard from 'clipboardy';
 import * as path from 'path';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { ProtoGrpcType } from './protos/service';
+import * as fs from 'fs';
+import { ProtoGrpcType } from './protos/latex_ocr';
 import { LatexOCRClient } from 'protos/latexocr/LatexOCR';
 import 'protos/latexocr/LatexRequest';
 
@@ -24,6 +24,7 @@ interface LatexOCRSettings {
 	delimiters: string;
 	port: string;
 	startServerOnLoad: boolean;
+	showStatusBar: boolean;
 }
 
 const DEFAULT_SETTINGS: LatexOCRSettings = {
@@ -31,6 +32,7 @@ const DEFAULT_SETTINGS: LatexOCRSettings = {
 	delimiters: '$$',
 	port: '50051',
 	startServerOnLoad: true,
+	showStatusBar: true,
 }
 
 // https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
@@ -43,6 +45,8 @@ export default class LatexOCR extends Plugin {
 	client: LatexOCRClient;
 	serverProcess: ChildProcess;
 	last_download_update: string;
+	status_bar: HTMLSpanElement;
+	statusBarInterval: number;
 
 	// Check if the user specified pythonPath is working,
 	// and check if the required libraries can be imported using a test script
@@ -117,11 +121,8 @@ export default class LatexOCR extends Plugin {
 
 	// Start the python server, informing the user with `Notice`s
 	async startServer() {
-		new Notice("⚙️ Starting LatexOCR server")
 		try {
 			this.serverProcess = await this.spawnLatexOcrServer(this.settings.port)
-			this.checkLatexOCRServer(0)
-				.then(() => new Notice("✅ LatexOCR server started"))
 		} catch (err) {
 			console.error(err)
 			this.checkPythonInstallation().then(() => {
@@ -136,6 +137,18 @@ export default class LatexOCR extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new LatexOCRSettingsTab(this.app, this));
 
+		this.vaultPath = (this.app.vault.adapter as FileSystemAdapter).getBasePath()
+		this.pluginPath = path.join(this.vaultPath, ".obsidian/plugins/obsidian-latex-ocr")
+
+		// path where temporary pasted files are stored
+		try {
+			await fs.promises.mkdir(path.join(this.pluginPath, "/.clipboard_images/"));
+		} catch (err) {
+			if (!err.message.contains("EEXIST")) {
+				console.error(err)
+			}
+		}
+
 		// Right click menu
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
@@ -145,7 +158,16 @@ export default class LatexOCR extends Plugin {
 							.setTitle("Generate Latex")
 							.setIcon("sigma")
 							.onClick(async () => {
-								this.fileToTex(path.join(this.vaultPath, file.path))
+								this.imgfileToLatex(path.join(this.vaultPath, file.path), async (latex) => {
+									try {
+										await clipboard.write(latex)
+									} catch (err) {
+										console.error(err);
+										new Notice(`⚠️ Couldn't copy to clipboard because document isn't focused`)
+									}
+									new Notice(`🪄 Latex copied to clipboard`)
+								}
+								)
 							});
 					});
 				}
@@ -157,13 +179,19 @@ export default class LatexOCR extends Plugin {
 			new LatexOCRModal(this.app, this).open()
 		})
 
-		this.vaultPath = (this.app.vault.adapter as FileSystemAdapter).getBasePath()
-		this.pluginPath = path.join(this.vaultPath, ".obsidian/plugins/obsidian-latex-ocr")
+		// 
+		this.addCommand({
+			id: 'paste-latex-from-clipboard',
+			name: 'Paste Latex from clipboard image',
+			editorCallback: (editor, ctx) => {
+				this.clipboardToText(editor)
+			}
+		})
 
 
 		// RPC Client
 		console.log(`latex_ocr: initializing RPC client at port ${this.settings.port}`)
-		const packageDefinition = protoLoader.loadSync(this.pluginPath + '/latex_ocr/service.proto');
+		const packageDefinition = await protoLoader.load(this.pluginPath + '/latex_ocr/protos/latex_ocr.proto');
 		const proto = (grpc.loadPackageDefinition(
 			packageDefinition
 		) as unknown) as ProtoGrpcType;
@@ -173,6 +201,14 @@ export default class LatexOCR extends Plugin {
 		// LatexOCR Python Server
 		if (this.settings.startServerOnLoad) {
 			await this.startServer()
+		}
+
+		this.status_bar = this.addStatusBarItem();
+		this.status_bar.createEl("span", { text: "LatexOCR ❌" });
+		this.updateStatusBar(100)
+		this.setStatusBarInterval(200)
+		if (!this.settings.showStatusBar) {
+			this.status_bar.hide()
 		}
 	}
 
@@ -189,6 +225,38 @@ export default class LatexOCR extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	async updateStatusBar(timeout: number): Promise<boolean> {
+		try {
+			await this.checkLatexOCRServer(timeout);
+			this.status_bar.setText("LatexOCR ✅")
+			return true
+		} catch (err) {
+			console.log(err)
+			if (err.includes("wasn't reachable")) {
+				this.status_bar.setText("LatexOCR ❌")
+			} else if (err.includes("downloading")) {
+				this.status_bar.setText("LatexOCR 🌐")
+			} else if (err.includes("loading")) {
+				this.status_bar.setText("LatexOCR ⚙️")
+			} else {
+				console.error(err)
+				this.status_bar.setText("LatexOCR ❌")
+			}
+			return false
+		}
+	}
+
+	setStatusBarInterval(time: number) {
+		setTimeout(async () => {
+			const ready = await this.updateStatusBar(100)
+			if (ready) {
+				this.setStatusBarInterval(5000)
+			} else {
+				this.setStatusBarInterval(200)
+			}
+		}, time)
+	}
+
 	checkLatexOCRServer(timeout_msecs: number) {
 		let timeout: Date | number;
 		if (timeout_msecs === 0) {
@@ -199,18 +267,26 @@ export default class LatexOCR extends Plugin {
 
 		return new Promise<void>((resolve, reject) => this.client.waitForReady(timeout, (err) => {
 			if (err) {
-				if (this.last_download_update) {
-					reject(`The server is still downloading the model: ${this.last_download_update}`)
-				} else {
-					reject(`The server wasn't reachable before the deadline (${timeout_msecs}ms)`)
-				}
+				reject(`The server wasn't reachable before the deadline (${timeout_msecs}ms)`)
 			} else {
-				resolve()
+				this.client.IsReady({}, (err, reply) => {
+					if (reply?.isReady) {
+						resolve()
+					} else {
+						if (this.last_download_update) {
+							reject(`The server is still downloading the model: ${this.last_download_update}`)
+						} else {
+							reject(`The server is still loading the model.`)
+						}
+					}
+				});
 			}
 		}));
 	}
 
-	async fileToTex(filepath: string) {
+	// Calls the LatexOCR client, and calls the callback with the result.
+	// The latex formula is wrapped in the user specified delimeter e.g. `$$`
+	async imgfileToLatex(filepath: string, success_callback: (latex: string) => void) {
 		const file = path.parse(filepath)
 		if (!IMG_EXTS.contains(file.ext.substring(1))) {
 			new Notice(`⚠️ Unsupported image extension ${file.ext}`, 5000)
@@ -225,20 +301,46 @@ export default class LatexOCR extends Plugin {
 				new Notice(`⚠️ ${err}`, 5000)
 			} else {
 				console.log(`latex_ocr_server: ${latex?.latex}`);
-				let result = latex?.latex
-
-				result = `${d}${result}${d}`
-
-				try {
-					await clipboard.write(result)
-				} catch (err) {
-					console.error(err);
-					new Notice(`⚠️ Couldn't copy to clipboard because document isn't focused`)
+				if (latex) {
+					let result = `${d}${latex.latex}${d}`;
+					success_callback(result);
 				}
-				new Notice(`🪄 Latex copied to clipboard`)
 			}
 			setTimeout(() => notice.hide(), 1000)
 		});
+	}
+
+	async clipboardToText(editor: Editor) {
+		try {
+			const file = await navigator.clipboard.read();
+			if (file.length > 0) {
+				for (const ext of IMG_EXTS) {
+					if (file[0].types.includes(`image/${ext}`)) {
+						console.log(`found image in clipboard with mimetype image/${ext}`)
+						const blob = await file[0].getType(`image/${ext}`);
+						const buffer = Buffer.from(await blob.arrayBuffer());
+						const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${ext}`);
+						fs.writeFile(imgpath, buffer, (err) => {
+							if (err) {
+								console.error(err)
+							} else {
+								console.log(`latex_ocr: image saved to ${imgpath}`)
+							}
+						});
+						const from = editor.getCursor("from")
+						console.log(`latex_ocr: placing image at ${from}`)
+						this.imgfileToLatex(imgpath, latex => {
+							editor.replaceRange(latex, from);
+						});
+						return
+					}
+				}
+			}
+			new Notice("Couldn't find image in clipboard")
+		} catch (err) {
+			new Notice(err.message)
+			console.error(err.name, err.message)
+		}
 	}
 }
 
@@ -287,7 +389,15 @@ class LatexOCRModal extends Modal {
 				.setButtonText("Convert to Latex")
 				.onClick(evt => {
 					if (this.imagePath) {
-						this.plugin.fileToTex(this.imagePath)
+						this.plugin.imgfileToLatex(this.imagePath, async (latex) => {
+							try {
+								await clipboard.write(latex)
+							} catch (err) {
+								console.error(err);
+								new Notice(`⚠️ Couldn't copy to clipboard because document isn't focused`)
+							}
+							new Notice(`🪄 Latex copied to clipboard`)
+						})
 					} else {
 						new Notice("⚠️ Select an image first")
 					}
@@ -400,5 +510,20 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
+
+		new Setting(containerEl)
+			.setName("Show status bar")
+			.setDesc("Emoji meanings: ✅ server online; ⚙️ server loading; 🌐 downloading model; ❌ server unreachable")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.showStatusBar)
+				.onChange(async (value) => {
+					if (value) {
+						this.plugin.status_bar.show()
+					} else {
+						this.plugin.status_bar.hide()
+					}
+					this.plugin.settings.showStatusBar = value
+					await this.plugin.saveSettings()
+				}));
 	}
 }
