@@ -47,7 +47,7 @@ export default class LatexOCR extends Plugin {
 	client: LatexOCRClient;
 	serverProcess: ChildProcess;
 	last_download_update: string;
-	status_bar: HTMLSpanElement;
+	statusBar: HTMLSpanElement;
 	statusBarInterval: number;
 
 	// Check if the user specified pythonPath is working,
@@ -121,21 +121,9 @@ export default class LatexOCR extends Plugin {
 		})
 	}
 
-	// Start the python server, informing the user with `Notice`s
-	async startServer() {
-		try {
-			this.serverProcess = await this.spawnLatexOcrServer(this.settings.port)
-		} catch (err) {
-			console.error(err)
-			this.checkPythonInstallation().then(() => {
-				new Notice(`❌ ${err}`, 10000)
-			}).catch((pythonErr) => {
-				new Notice(`❌ ${pythonErr}`, 10000)
-			})
-		}
-	}
 
 	async onload() {
+		// Load settings & initialize path values
 		await this.loadSettings();
 		this.addSettingTab(new LatexOCRSettingsTab(this.app, this));
 
@@ -146,7 +134,7 @@ export default class LatexOCR extends Plugin {
 			await this.saveSettings()
 		}
 
-		// path where temporary pasted files are stored
+		// Folder where temporary pasted files are stored
 		try {
 			await fs.promises.mkdir(path.join(this.pluginPath, "/.clipboard_images/"));
 		} catch (err) {
@@ -155,7 +143,7 @@ export default class LatexOCR extends Plugin {
 			}
 		}
 
-		// Right click menu
+		// Right-click Generate Latex menu
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
 				if (file instanceof TFile && IMG_EXTS.contains(file.extension)) {
@@ -185,7 +173,7 @@ export default class LatexOCR extends Plugin {
 			new LatexOCRModal(this.app, this).open()
 		})
 
-		// 
+		// Command to read image from clipboard
 		this.addCommand({
 			id: 'paste-latex-from-clipboard',
 			name: 'Paste Latex from clipboard image',
@@ -206,15 +194,16 @@ export default class LatexOCR extends Plugin {
 
 		// LatexOCR Python Server
 		if (this.settings.startServerOnLoad) {
-			await this.startServer()
+			this.startServer()
 		}
 
-		this.status_bar = this.addStatusBarItem();
-		this.status_bar.createEl("span", { text: "LatexOCR ❌" });
+		// Status Bar
+		this.statusBar = this.addStatusBarItem();
+		this.statusBar.createEl("span", { text: "LatexOCR ❌" });
 		this.updateStatusBar(100)
 		this.setStatusBarInterval(200)
 		if (!this.settings.showStatusBar) {
-			this.status_bar.hide()
+			this.statusBar.hide()
 		}
 	}
 
@@ -231,27 +220,49 @@ export default class LatexOCR extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	// Start the server process. If it fails, try to see if python is working.
+	async startServer() {
+		try {
+			this.serverProcess = await this.spawnLatexOcrServer(this.settings.port)
+		} catch (err) {
+			console.error(err)
+			this.checkPythonInstallation().then(() => {
+				new Notice(`❌ ${err}`, 10000)
+			}).catch((pythonErr) => {
+				new Notice(`❌ ${pythonErr}`, 10000)
+			})
+		}
+	}
+
+	// Update the status bar based on the connection to the LatexOCR server
+	// ✅: LatexOCR is up and accepting requests
+	// 🌐: LatexOCR is downloading the model from huggingface
+	// ⚙️: LatexOCR is loading the model
+	// ❌: LatexOCR isn't reachable
 	async updateStatusBar(timeout: number): Promise<boolean> {
 		try {
 			await this.checkLatexOCRServer(timeout);
-			this.status_bar.setText("LatexOCR ✅")
+			this.statusBar.setText("LatexOCR ✅")
 			return true
 		} catch (err) {
 			console.log(err)
 			if (err.includes("wasn't reachable")) {
-				this.status_bar.setText("LatexOCR ❌")
+				this.statusBar.setText("LatexOCR ❌")
 			} else if (err.includes("downloading")) {
-				this.status_bar.setText("LatexOCR 🌐")
+				this.statusBar.setText("LatexOCR 🌐")
 			} else if (err.includes("loading")) {
-				this.status_bar.setText("LatexOCR ⚙️")
+				this.statusBar.setText("LatexOCR ⚙️")
 			} else {
 				console.error(err)
-				this.status_bar.setText("LatexOCR ❌")
+				this.statusBar.setText("LatexOCR ❌")
 			}
 			return false
 		}
 	}
 
+	// Call `updateStatusBar` with an initial delay of `number`.
+	// After this, `updateStatusBar` will be called every 5 seconds if the server was ready, 
+	// or every 200 ms if the server was not ready.
 	setStatusBarInterval(time: number) {
 		setTimeout(async () => {
 			const ready = await this.updateStatusBar(100)
@@ -316,6 +327,8 @@ export default class LatexOCR extends Plugin {
 		});
 	}
 
+	// Get a clipboard file, save it to disk temporarily,
+	// call the LatexOCR client. The result is pasted wherever the cursor is
 	async clipboardToText(editor: Editor) {
 		try {
 			const file = await navigator.clipboard.read();
@@ -524,9 +537,9 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showStatusBar)
 				.onChange(async (value) => {
 					if (value) {
-						this.plugin.status_bar.show()
+						this.plugin.statusBar.show()
 					} else {
-						this.plugin.status_bar.hide()
+						this.plugin.statusBar.hide()
 					}
 					this.plugin.settings.showStatusBar = value
 					await this.plugin.saveSettings()
