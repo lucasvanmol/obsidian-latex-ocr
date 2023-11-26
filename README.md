@@ -4,9 +4,14 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ![demo](images/demo.gif)
 
-This plugin uses [NormXU's nougat-latex-ocr](https://github.com/NormXU/nougat-latex-ocr) model, which is based on PyTorch. Massive thanks to them for providing the open source model. Note that the plugin downloads the ~1.4 GB model and runs it locally.
+This plugin uses [NormXU's nougat-latex-ocr](https://github.com/NormXU/nougat-latex-ocr) model, which is based on PyTorch. Massive thanks to them for providing the open source model. Note that the plugin downloads the ~1.4 GB model and runs it locally. It also isn't perfect, and can get things wrong! Make sure to double check formulas.
 
 Note this plugin is in ALPHA and currently more of a proof of concept. Please raise any issues you may find with the plugin using the issues tab on Github.
+
+## Features
+
+- Paste LaTeX equations directly into your notes using an image from your clipboard with a custom command (bind it to a hotkey like `Ctrl+Alt+v` if you use it often!).
+- Transform images in your vault to LaTeX equations by choosing a new "Generate Latex" option in their context menu.
 
 ## Manual installation
 
