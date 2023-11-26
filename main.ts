@@ -21,6 +21,7 @@ import 'protos/latexocr/LatexRequest';
 
 interface LatexOCRSettings {
 	pythonPath: string;
+	cacheDirPath: string;
 	delimiters: string;
 	port: string;
 	startServerOnLoad: boolean;
@@ -29,6 +30,7 @@ interface LatexOCRSettings {
 
 const DEFAULT_SETTINGS: LatexOCRSettings = {
 	pythonPath: 'python3',
+	cacheDirPath: '',
 	delimiters: '$$',
 	port: '50051',
 	startServerOnLoad: true,
@@ -88,7 +90,7 @@ export default class LatexOCR extends Plugin {
 			const args = [
 				path.resolve(this.pluginPath, "latex_ocr/server.py"),
 				"--port", port,
-				"--cache_dir", path.resolve(this.pluginPath, "model_cache")]
+				"--cache_dir", this.settings.cacheDirPath]
 			const pythonProcess = spawn(this.settings.pythonPath, args)
 
 			pythonProcess.on('spawn', () => {
@@ -139,6 +141,10 @@ export default class LatexOCR extends Plugin {
 
 		this.vaultPath = (this.app.vault.adapter as FileSystemAdapter).getBasePath()
 		this.pluginPath = path.join(this.vaultPath, ".obsidian/plugins/obsidian-latex-ocr")
+		if (this.settings.cacheDirPath === "") {
+			this.settings.cacheDirPath = path.resolve(this.pluginPath, "model_cache")
+			await this.saveSettings()
+		}
 
 		// path where temporary pasted files are stored
 		try {
@@ -525,5 +531,18 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 					this.plugin.settings.showStatusBar = value
 					await this.plugin.saveSettings()
 				}));
+
+		new Setting(containerEl)
+			.setName("Cache dir")
+			.setDesc("The directory where the model is saved. By default this is in `Vault/.obsidian/plugins/obsidian-latex-ocr/model_cache \
+				Note that changing this will not delete the old cache, and require the model to be redownloaded. \
+				The server must be restarted for this to take effect.")
+			.addText(text => text
+				.setValue(this.plugin.settings.cacheDirPath)
+				.onChange(async (value) => {
+					this.plugin.settings.cacheDirPath = normalizePath(value);
+					await this.plugin.saveSettings();
+				}));
+
 	}
 }
