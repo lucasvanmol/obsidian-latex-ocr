@@ -1,10 +1,6 @@
 /* TODO:
 - add check to see if GPU is being used
 - add command to start server
-- status bar on bottom right
-	- 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	- https://docs.obsidian.md/Plugins/User+interface/Status+bar
 - allow pasting images in modal
 */
 
@@ -120,7 +116,6 @@ export default class LatexOCR extends Plugin {
 
 		})
 	}
-
 
 	async onload() {
 		// Load settings & initialize path values
@@ -350,6 +345,7 @@ export default class LatexOCR extends Plugin {
 						console.log(`latex_ocr: placing image at ${from}`)
 						this.imgfileToLatex(imgpath, latex => {
 							editor.replaceRange(latex, from);
+							editor.scrollIntoView({ from: from, to: from })
 						});
 						return
 					}
