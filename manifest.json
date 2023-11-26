@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-latex-ocr",
 	"name": "Latex OCR",
-	"version": "1.0.0",
+	"version": "0.2.0",
 	"minAppVersion": "0.15.0",
 	"description": "This plugin can generate LaTeX equations from images.",
 	"author": "Lucas Van Mol",
