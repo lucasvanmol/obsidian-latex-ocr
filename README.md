@@ -93,9 +93,9 @@ The reason for this is that loading the model takes some time. This setup allows
 python -m grpc_tools.protoc -I./protos --python_out=. --pyi_out=. --grpc_python_out=. ./protos/latex_ocr.proto
 ```
 
-For js/ts, we use [proto loader](https://www.npmjs.com/package/@grpc/proto-loader#example-usage)
+For js/ts, we use [ts-proto](https://github.com/stephenh/ts-proto)
 ```
-node .\node_modules\@grpc\proto-loader\build\bin\proto-loader-gen-types.js  latex_ocr.proto --outDir ./protos --includeDirs .\latex_ocr\protos\ --grpcLib=@grpc/grpc-js
+protoc --plugin=protoc-gen-ts_proto=".\\node_modules\\.bin\\protoc-gen-ts_proto.cmd" --ts_proto_out=. ./protos/latex_ocr.proto --ts_proto_opt=outputServices=grpc-js
 ```
 
 ### API Documentation

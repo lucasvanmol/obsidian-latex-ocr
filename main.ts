@@ -9,11 +9,8 @@ import { ChildProcess, spawn } from 'child_process';
 import clipboard from 'clipboardy';
 import * as path from 'path';
 import * as grpc from '@grpc/grpc-js';
-import * as protoLoader from '@grpc/proto-loader';
 import * as fs from 'fs';
-import { ProtoGrpcType } from './protos/latex_ocr';
-import { LatexOCRClient } from 'protos/latexocr/LatexOCR';
-import 'protos/latexocr/LatexRequest';
+import { LatexOCRClient } from 'protos/latex_ocr';
 
 interface LatexOCRSettings {
 	pythonPath: string;
@@ -87,6 +84,7 @@ export default class LatexOCR extends Plugin {
 			const args = [
 				"-m", "latex_ocr_server",
 				"start",
+				"-d",
 				"--port", port,
 				"--cache_dir", this.settings.cacheDirPath]
 			const pythonProcess = spawn(this.settings.pythonPath, args)
@@ -182,12 +180,13 @@ export default class LatexOCR extends Plugin {
 
 		// RPC Client
 		console.log(`latex_ocr: initializing RPC client at port ${this.settings.port}`)
-		const packageDefinition = await protoLoader.load(this.pluginPath + '/protos/latex_ocr.proto');
-		const proto = (grpc.loadPackageDefinition(
-			packageDefinition
-		) as unknown) as ProtoGrpcType;
-		this.client = new proto.latexocr.LatexOCR(`localhost:${this.settings.port}`, grpc.credentials.createInsecure());
+		// const packageDefinition = await protoLoader.load(this.pluginPath + '/protos/latex_ocr.proto');
+		// const proto = (grpc.loadPackageDefinition(
+		// 	packageDefinition
+		// ) as unknown) as ProtoGrpcType;
+		// this.client = new proto.latexocr.LatexOCR();
 
+		this.client = new LatexOCRClient(`localhost:${this.settings.port}`, grpc.credentials.createInsecure())
 
 		// LatexOCR Python Server
 		if (this.settings.startServerOnLoad) {
@@ -283,7 +282,7 @@ export default class LatexOCR extends Plugin {
 			if (err) {
 				reject(`The server wasn't reachable before the deadline (${timeout_msecs}ms)`)
 			} else {
-				this.client.IsReady({}, (err, reply) => {
+				this.client.isReady({}, (err, reply) => {
 					if (reply?.isReady) {
 						resolve()
 					} else {
@@ -309,7 +308,7 @@ export default class LatexOCR extends Plugin {
 		const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
 		const d = this.settings.delimiters;
 
-		this.client.GenerateLatex({ imagePath: filepath }, async function (err, latex) {
+		this.client.generateLatex({ imagePath: filepath }, async function (err, latex) {
 			if (err) {
 				console.error(`Error getting response from latex_ocr_server: ${err}`)
 				new Notice(`⚠️ ${err}`, 5000)

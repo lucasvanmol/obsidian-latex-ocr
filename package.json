@@ -24,8 +24,8 @@
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "^1.9.9",
-		"@grpc/proto-loader": "^0.7.10",
 		"@xenova/transformers": "^2.7.0",
-		"clipboardy": "^4.0.0"
+		"clipboardy": "^4.0.0",
+		"ts-proto": "^1.165.0"
 	}
 }
