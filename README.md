@@ -4,18 +4,16 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ![demo](images/demo.gif)
 
-This plugin uses [NormXU's nougat-latex-ocr](https://github.com/NormXU/nougat-latex-ocr) model, which is based on PyTorch. Massive thanks to them for providing the open source model. Note that the plugin downloads the ~1.4 GB model and runs it locally. It also isn't perfect, and can get things wrong! Make sure to double check formulas.
-
-Note this plugin is in ALPHA and currently more of a proof of concept. Please raise any issues you may find with the plugin using the issues tab on Github.
+Note that this plugin requires the installation of a python package `latex_ocr_server`, see [installation instructions](#manual-installation). The plugin downloads the ~1.4 GB model and runs it locally. Make sure to double check formulas, because the model can get things wrong!
 
 ## Features
 
-- Paste LaTeX equations directly into your notes using an image from your clipboard with a custom command (bind it to a hotkey like `Ctrl+Alt+v` if you use it often!).
+- Paste LaTeX equations directly into your notes using an image from your clipboard with a custom command (bind it to a hotkey like `Ctrl+Alt+V` if you use it often!).
 - Transform images in your vault to LaTeX equations by choosing a new "Generate Latex" option in their context menu.
 
 ## Manual installation
 
-This project uses a python package to do most of the heavy lifting. Install it using `pip` (or, preferably `pipx`):
+Firstly, this project uses a python package to do most of the heavy lifting. Install it using `pip` (or, preferably `pipx`):
 
 ```
 pip install https://github.com/lucasvanmol/latex-ocr-server/releases/download/0.1.0/latex_ocr_server-0.1.0-py3-none-any.whl
@@ -36,17 +34,8 @@ python -m latex_ocr_server --version
 
 ### BRAT
 
-You can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this autmatically, and get automatic updates. Note that the `latex_ocr_server` python package is still required.
+Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this autmatically by providing the link to this repository. If enabled you'll get automatic updates for future beta version. Note that the `latex_ocr_server` python package is still required. If installing through BRAT.
 
-### GPU support
-
-You can check if GPU support is working by running:
-
-```
-python -m latex_ocr_server info --gpu-available
-```
-
-If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
 
 ### Configuration
 
@@ -58,11 +47,32 @@ You will first need to set the python path that the plugin will use to run the m
 
 Note that the first time you do this, the model needs to be downloaded from huggingface, and is around ~1.4 GB. You can check the status of this download in the LatexOCR settings tab by pressing "Check Status".
 
+The status bar at the bottom will indicate the status of the server.
+
+| Status     | Meaning            |
+| ---------- | ------------------ |
+| LatexOCR ✅ | server online      |
+| LatexOCR ⚙️ | server loading     |
+| LatexOCR 🌐 | downloading model  |
+| LatexOCR ❌ | server unreachable |
+
+### GPU support
+
+You can check if GPU support is working by running:
+
+```
+python -m latex_ocr_server info --gpu-available
+```
+
+If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
+
 ---
 
 ## Development
 
 ### How this plugin works
+
+This plugin uses [NormXU's nougat-latex-ocr](https://github.com/NormXU/nougat-latex-ocr) model, which is based on PyTorch. Massive thanks to them for providing the open source model.
 
 This plugin consists of two main parts. The first is [latex-ocr-server](https://github.com/lucasvanmol/latex-ocr-server), a python script that downloads and runs the model using huggingface transformers and pytorch. This script interfaces with the javascript plugin using protocol buffers, allowing the plugin to communicate and make requests to the python script.
 
