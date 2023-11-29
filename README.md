@@ -4,16 +4,34 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ![demo](images/demo.gif)
 
-Note that this plugin requires the installation of a python package `latex_ocr_server`, see [installation instructions](#manual-installation). The plugin downloads the ~1.4 GB model and runs it locally. Make sure to double check formulas, because the model can get things wrong!
 
 ## Features
 
 - Paste LaTeX equations directly into your notes using an image from your clipboard with a custom command (bind it to a hotkey like `Ctrl+Alt+V` if you use it often!).
 - Transform images in your vault to LaTeX equations by choosing a new "Generate Latex" option in their context menu.
+- Use either the HuggingFace [inference API](#using-inference-api) or [run locally](#run-locally)
 
-## Manual installation
+## Installation
 
-Firstly, this project uses a python package to do most of the heavy lifting. Install it using `pip` (or, preferably `pipx`):
+### Manual Installation
+
+- Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
+- Navigate to this project's "Releases" tab
+- Copy over `main.js`, `styles.css` and `manifest.json`, to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
+
+### BRAT
+
+Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this automatically by providing the link to this repository. If enabled you'll get automatic updates for future beta versions.
+
+## Using Inference API
+
+By default, this plugin uses the HuggingFace inference API. It therefore requires you to create an account at https://huggingface.co, and then create a `read` API token in your [Hugging Face profile settings](https://huggingface.co/settings/tokens).
+
+Open Obsidian and navigate to the Community Plugins section and enable the plugin. Then head to the LatexOCR settings tab, and input your API key.
+
+## Run Locally
+
+Alternatively, you can run the model locally. This requires installing an accompanying [python package](https://github.com/lucasvanmol/latex-ocr-server). Install it using `pip` (or, preferably `pipx`):
 
 ```
 pip install https://github.com/lucasvanmol/latex-ocr-server/releases/download/0.1.0/latex_ocr_server-0.1.0-py3-none-any.whl
@@ -25,21 +43,11 @@ You can check if it is installed by running
 python -m latex_ocr_server --version
 ```
 
-
-### Copy files
-
-- Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
-- Navigate to this project's "Releases" tab
-- Copy over `main.js`, `styles.css` and `manifest.json`, to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
-
-### BRAT
-
-Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this autmatically by providing the link to this repository. If enabled you'll get automatic updates for future beta version. Note that the `latex_ocr_server` python package is still required. If installing through BRAT.
-
+The model is around ~1.4 GB to download.
 
 ### Configuration
 
-Open Obsidian and navigate to the Community Plugins section and enable the plugin. Then head to the LatexOCR settings tab to configure it.
+Open Obsidian and navigate to the Community Plugins section and enable the plugin. Then head to the LatexOCR settings tab, enable "Use local model" and configure it.
 
 ![settings](images/settings.png)
 
