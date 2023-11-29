@@ -466,6 +466,20 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 				}));
 
 
+		const checkStatus = () => {
+			this.plugin.checkLatexOCRServer(500).then(() => {
+				new Notice("✅ The server is reachable!")
+			}).catch((err) => {
+				if (err.includes("downloading")) {
+					new Notice(`🌐 ${err}`)
+				} else if (err.includes("loading")) {
+					new Notice(`⚙️ ${err}`)
+				} else {
+					new Notice(`❌ ${err}`)
+				}
+			})
+		}
+
 		new Setting(containerEl)
 			.setName('Server status')
 			.setDesc("LatexOCR runs a python script in the background that can process OCR requests. \
@@ -474,20 +488,18 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 			.addButton(button => button
 				.setButtonText("Check status")
 				.onClick(evt => {
-					this.plugin.checkLatexOCRServer(500).then(() => {
-						new Notice("✅ The server is reachable!")
-					}).catch((err) => {
-						new Notice(`❌ ${err}`)
-					})
+					checkStatus()
 				})
 			)
 			.addButton(button => button
 				.setButtonText("(Re)start server")
-				.onClick(evt => {
+				.onClick(async (evt) => {
 					if (this.plugin.serverProcess) {
 						this.plugin.serverProcess.kill()
 					}
-					this.plugin.startServer()
+					new Notice("⚙️ Starting server...", 2000)
+					await this.plugin.startServer()
+					setTimeout(checkStatus, 2100)
 				}))
 
 
