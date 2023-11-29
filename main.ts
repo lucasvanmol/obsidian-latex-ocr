@@ -441,7 +441,7 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Python path')
-			.setDesc("Path to Python installation. You need to have the necessary packages installed, see the project's README for more information.\
+			.setDesc("Path to Python installation. You need to have the `latex_ocr_server` package installed, see the project's README for more information.\
 			Note that changing the path requires a server restart in order to take effect.")
 			.addText(text => text
 				.setPlaceholder('path/to/python.exe')
@@ -544,7 +544,7 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Cache dir")
-			.setDesc("The directory where the model is saved. By default this is in `Vault/.obsidian/plugins/obsidian-latex-ocr/model_cache \
+			.setDesc("The directory where the model is saved. By default this is in `Vault/.obsidian/plugins/obsidian-latex-ocr/model_cache`. \
 				Note that changing this will not delete the old cache, and require the model to be redownloaded. \
 				The server must be restarted for this to take effect.")
 			.addText(text => text

@@ -3,7 +3,7 @@
 	"name": "Latex OCR",
 	"version": "0.3.0",
 	"minAppVersion": "0.15.0",
-	"description": "This plugin can generate LaTeX equations from images.",
+	"description": "Generate LaTeX equations from images in your vault or clipboard.",
 	"author": "Lucas Van Mol",
 	"authorUrl": "github.com/lucasvanmol",
 	"fundingUrl": "https://www.buymeacoffee.com/lucasvanmol",
