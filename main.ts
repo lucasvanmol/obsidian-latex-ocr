@@ -51,10 +51,11 @@ export default class LatexOCR extends Plugin {
 	checkPythonInstallation() {
 		return new Promise<void>(
 			(resolve, reject) => {
-				const pythonProcess = spawn(this.settings.pythonPath, [path.join(this.pluginPath, "latex_ocr/test_packages.py")])
+				const pythonProcess = spawn(this.settings.pythonPath, ["-m", "latex_ocr_server", "--version"])
 
 				pythonProcess.stdout.on('data', data => {
-					console.log(data.toString())
+					const [prog, version] = data.toString().split(" ")
+					console.log(`${prog} version ${version} (required version: ${(this.manifest as any).latexOcrServerVersion})`)
 				})
 				pythonProcess.stderr.on('data', data => {
 					console.error(data.toString())
@@ -64,7 +65,7 @@ export default class LatexOCR extends Plugin {
 					if (code === 0) {
 						resolve()
 					} else {
-						reject(new Error(`Couldn't import necessary libraries using ${this.settings.pythonPath}`))
+						reject(new Error(`latex_ocr_server isnt't installed for ${this.settings.pythonPath}`))
 					}
 				})
 
@@ -84,7 +85,8 @@ export default class LatexOCR extends Plugin {
 	spawnLatexOcrServer(port: string): Promise<ChildProcess> {
 		return new Promise<ChildProcess>((resolve, reject) => {
 			const args = [
-				path.resolve(this.pluginPath, "latex_ocr/server.py"),
+				"-m", "latex_ocr_server",
+				"start",
 				"--port", port,
 				"--cache_dir", this.settings.cacheDirPath]
 			const pythonProcess = spawn(this.settings.pythonPath, args)
@@ -180,7 +182,7 @@ export default class LatexOCR extends Plugin {
 
 		// RPC Client
 		console.log(`latex_ocr: initializing RPC client at port ${this.settings.port}`)
-		const packageDefinition = await protoLoader.load(this.pluginPath + '/latex_ocr/protos/latex_ocr.proto');
+		const packageDefinition = await protoLoader.load(this.pluginPath + '/protos/latex_ocr.proto');
 		const proto = (grpc.loadPackageDefinition(
 			packageDefinition
 		) as unknown) as ProtoGrpcType;

@@ -15,51 +15,38 @@ Note this plugin is in ALPHA and currently more of a proof of concept. Please ra
 
 ## Manual installation
 
-This project requires [python](https://www.python.org/) to be installed, including a number of python packages. If you don't want your python installation to be polluted, feel free to use a virtual environment for this purpose.
+This project uses a python package to do most of the heavy lifting. Install it using `pip` (or, preferably `pipx`):
+
+```
+pip install https://github.com/lucasvanmol/latex-ocr-server/releases/download/0.1.0/latex_ocr_server-0.1.0-py3-none-any.whl
+```
+
+You can check if it is installed by running
+
+```
+python -m latex_ocr_server --version
+```
+
 
 ### Copy files
 
 - Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
-- Download the zip folder from the "Releases" tab
-- Copy over `main.js`, `styles.css`, `manifest.json`, `latex_ocr` to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
+- Navigate to this project's "Releases" tab
+- Copy over `main.js`, `styles.css` and `manifest.json`, to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
 
-Note that using [BRAT](https://github.com/TfTHacker/obsidian42-brat) does not work as of now, since you also need the python scripts in the `latex_ocr` folder, and you'll still need to configure your Python environment.
+### BRAT
 
-### Setup Python environemnt
+You can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this autmatically, and get automatic updates. Note that the `latex_ocr_server` python package is still required.
 
-First navigate to `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
+### GPU support
 
-#### Using a Virtual Environment (optional)
-
-If you wish, create a [virtual environment](https://docs.python.org/3/library/venv.html)
-
-In Windows this could look like:
-```
-python -m venv .env
-.env\Scripts\activate
-```
-
-Note that this python installation must then be set in the plugin settings. The python executable will usually be in 
+You can check if GPU support is working by running:
 
 ```
-C:\path\to\your\VaultFolder\.obsidian\plugins\obsidian-latex-ocr\.env\python.exe
+python -m latex_ocr_server info --gpu-available
 ```
 
-#### Install packages
-
-If you wish to use GPU for inference (requires CUDA):
-
-```
-pip install -r ./latex_ocr/requirements_gpu.txt
-```
-If you get an error message installing torch this way, refer to
-`https://pytorch.org/get-started/locally/` to install it seperately. It may look something like `pip install torch --index-url https://download.pytorch.org/whl/cu118`
-
-otherwise:
-
-```
-pip install -r ./latex_ocr/requirements_cpu.txt
-```
+If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
 
 ### Configuration
 
@@ -77,15 +64,14 @@ Note that the first time you do this, the model needs to be downloaded from hugg
 
 ### How this plugin works
 
-This plugin consists of two main parts. The first is `latex_ocr`, a python script that downloads and runs the model using huggingface transformers and pytorch. This script interfaces with the javascript plugin using protocol buffers, allowing the plugin to communicate and make requests to the python script.
+This plugin consists of two main parts. The first is [latex-ocr-server](https://github.com/lucasvanmol/latex-ocr-server), a python script that downloads and runs the model using huggingface transformers and pytorch. This script interfaces with the javascript plugin using protocol buffers, allowing the plugin to communicate and make requests to the python script.
 
-The reason for this is that loading the model takes some time. This setup allows the model to be loaded in the background, making subsequent requests much faster.
+The reason for this is that loading the model takes some time. This setup allows the model to be loaded in the background on startup, making subsequent requests much faster.
 
 ### Getting started
 
 - Install NodeJS, then run `npm i` or `yarn` in the command line under the repo folder.
-- Install the required python packages
-  - `pip install requirements_cpu.txt` or `pip install requirements_gpu.txt`
+- Install the required python module from [latex-ocr-server](https://github.com/lucasvanmol/latex-ocr-server)
 - Run `npm run dev` to compile the plugin from `main.ts` to `main.js`.
 - Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
 - Reload Obsidian to load the new version of the plugin.
