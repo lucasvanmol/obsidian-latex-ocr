@@ -466,8 +466,8 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 				}));
 
 
-		const checkStatus = () => {
-			this.plugin.checkLatexOCRServer(500).then(() => {
+		const checkStatus = (timeout: number) => {
+			this.plugin.checkLatexOCRServer(timeout).then(() => {
 				new Notice("✅ The server is reachable!")
 			}).catch((err) => {
 				if (err.includes("downloading")) {
@@ -488,7 +488,7 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 			.addButton(button => button
 				.setButtonText("Check status")
 				.onClick(evt => {
-					checkStatus()
+					checkStatus(500)
 				})
 			)
 			.addButton(button => button
@@ -497,9 +497,9 @@ class LatexOCRSettingsTab extends PluginSettingTab {
 					if (this.plugin.serverProcess) {
 						this.plugin.serverProcess.kill()
 					}
-					new Notice("⚙️ Starting server...", 2000)
+					new Notice("⚙️ Starting server...", 5000)
 					await this.plugin.startServer()
-					setTimeout(checkStatus, 2100)
+					setTimeout(() => checkStatus(10000), 5200)
 				}))
 
 
