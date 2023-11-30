@@ -137,7 +137,9 @@ export default class LatexOCR extends Plugin {
 	}
 
 	async saveSettings() {
-		this.model.reloadSettings(this.settings)
+		if (this.model) {
+			this.model.reloadSettings(this.settings)
+		}
 		await this.saveData(this.settings);
 	}
 
