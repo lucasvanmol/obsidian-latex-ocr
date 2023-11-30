@@ -34,7 +34,7 @@ python -m latex_ocr_server --version
 
 ### BRAT
 
-Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this autmatically by providing the link to this repository. If enabled you'll get automatic updates for future beta version. Note that the `latex_ocr_server` python package is still required. If installing through BRAT.
+Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this automatically by providing the link to this repository. If enabled you'll get automatic updates for future beta versions. Note that the `latex_ocr_server` python package is still required if installing through BRAT.
 
 
 ### Configuration
