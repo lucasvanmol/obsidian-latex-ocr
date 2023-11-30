@@ -24,7 +24,7 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ### BRAT
 
-Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this automatically by providing the link to this repository. If enabled you'll get automatic updates for future beta versions.
+Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this automatically by providing the link to this repository. If enabled you can download future beta versions easily.
 
 ## Using Inference API
 
@@ -45,8 +45,6 @@ You can check if it is installed by running
 ```
 python -m latex_ocr_server --version
 ```
-
-The model is around ~1.4 GB to download.
 
 ### Configuration
 
