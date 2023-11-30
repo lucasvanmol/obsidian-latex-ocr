@@ -47,7 +47,14 @@ export default class ApiModel implements Model {
             console.log(response)
             if (response.ok) {
                 const result = await response.json();
-                resolve(JSON.stringify(result))
+                console.log(result)
+                const latex = result[0].generated_text
+                if (latex) {
+                    const d = this.settings.delimiters
+                    resolve(`${d}${latex}${d}`)
+                } else {
+                    reject(`Malformed response ${result}`)
+                }
             } else if (response.status === 503) {
                 reject("Inference API is being provisioned, please try again in a few seconds")
             } else if (response.status === 400) {
