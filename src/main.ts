@@ -213,6 +213,7 @@ export default class LatexOCR extends Plugin {
 							this.model.imgfileToLatex(imgpath).then(latex => {
 								editor.replaceRange(latex, from);
 								editor.scrollIntoView({ from: from, to: from })
+								new Notice(`🪄 Latex pasted to note`)
 							}).catch((err) => {
 								new Notice(`⚠️ ${err}`, 5000)
 							});
