@@ -3,6 +3,8 @@ import Model, { Status } from "./model";
 import * as fs from 'fs'
 import { LatexOCRSettings } from "main";
 import safeStorage from "safeStorage";
+import { Notice } from "obsidian";
+import * as path from "path";
 
 export default class ApiModel implements Model {
     settings: LatexOCRSettings
@@ -27,8 +29,10 @@ export default class ApiModel implements Model {
     };
 
     unload() { };
-    async imgfileToLatex(filepath: PathLike): Promise<string> {
+    async imgfileToLatex(filepath: string): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {
+            const file = path.parse(filepath)
+            const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
 
             const data = fs.readFileSync(filepath);
             const response = await fetch(
@@ -46,10 +50,12 @@ export default class ApiModel implements Model {
                 resolve(JSON.stringify(result))
             } else if (response.status === 503) {
                 reject("Inference API is being provisioned, please try again in a few seconds")
+            } else if (response.status === 400) {
+                reject("Error 400: Bad request; check your API key in the settings")
             } else {
-                reject(response.statusText)
+                reject(`Got ${response.status}: ${response.statusText}`)
             }
-
+            setTimeout(() => notice.hide(), 1000)
         })
     };
     status() {
