@@ -206,21 +206,19 @@ export default class LatexOCR extends Plugin {
 						const blob = await file[0].getType(`image/${ext}`);
 						const buffer = Buffer.from(await blob.arrayBuffer());
 						const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${ext}`);
-						fs.writeFile(imgpath, buffer, (err) => {
-							if (err) {
-								console.error(err)
-							} else {
-								console.log(`latex_ocr: image saved to ${imgpath}`)
-							}
-						});
 						const from = editor.getCursor("from")
 						console.log(`latex_ocr: placing image at ${from}`)
-						this.model.imgfileToLatex(imgpath).then(latex => {
-							editor.replaceRange(latex, from);
-							editor.scrollIntoView({ from: from, to: from })
-						}).catch((err) => {
-							new Notice(`⚠️ ${err}`, 5000)
-						});
+						try {
+							fs.writeFileSync(imgpath, buffer)
+							this.model.imgfileToLatex(imgpath).then(latex => {
+								editor.replaceRange(latex, from);
+								editor.scrollIntoView({ from: from, to: from })
+							}).catch((err) => {
+								new Notice(`⚠️ ${err}`, 5000)
+							});
+						} catch (err) {
+							console.error(err)
+						}
 						return
 					}
 				}
