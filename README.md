@@ -1,4 +1,7 @@
 # Latex OCR for Obsidian
+![GitHub release (with filter)](https://img.shields.io/github/v/release/lucasvanmol/obsidian-latex-ocr) 
+<a href="https://www.buymeacoffee.com/lucasvanmol" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="20" width="100"></a>
+
 
 Generate Latex equations from images and screenshots inside your vault.
 
@@ -73,4 +76,8 @@ python -m latex_ocr_server info --gpu-available
 ```
 
 If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
+
+---
+
+Enjoy this plugin? Support me with a coffee!
 
