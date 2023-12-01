@@ -28,9 +28,10 @@ Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-b
 
 ## Using Inference API
 
-By default, this plugin uses the HuggingFace inference API. It therefore requires you to create an account at https://huggingface.co, and then create a `read` API token in your [Hugging Face profile settings](https://huggingface.co/settings/tokens).
-
-Open Obsidian and navigate to the Community Plugins section and enable the plugin. Then head to the LatexOCR settings tab, and input your API key.
+By default, this plugin uses the HuggingFace inference API. Here's how you get your API key:
+- Create an account or login at https://huggingface.co
+- Create a `read` access token in your [Hugging Face profile settings](https://huggingface.co/settings/tokens). If you already have other access tokens I recommend creating one specifically for this plugin.
+- After enabling the plugin in Obsidian, head to the Latex OCR settings tab, and input the API key you generated.
 
 ## Run Locally
 
