@@ -9,7 +9,7 @@ import clipboard from 'clipboardy';
 import * as path from 'path';
 import * as fs from 'fs';
 import { LocalModel } from "models/local_model"
-import Model, { Status } from 'models/model';
+import Model, { Status, StatusBar } from 'models/model';
 import { LatexOCRModal } from 'modal';
 import ApiModel from 'models/online_model';
 import LatexOCRSettingsTab from 'settings';
@@ -45,8 +45,7 @@ export default class LatexOCR extends Plugin {
 	settings: LatexOCRSettings;
 	vaultPath: string;
 	pluginPath: string;
-	statusBar: HTMLSpanElement;
-	statusBarInterval: number;
+	statusBar: StatusBar;
 	model: Model;
 
 	async onload() {
@@ -77,7 +76,7 @@ export default class LatexOCR extends Plugin {
 			}
 		}
 
-		// Right-click Generate Latex menu
+		// Right-click "Generate Latex" menu on image files
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
 				if (file instanceof TFile && IMG_EXTS.contains(file.extension)) {
@@ -85,6 +84,7 @@ export default class LatexOCR extends Plugin {
 						item
 							.setTitle("Generate Latex")
 							.setIcon("sigma")
+							.setSection("info")
 							.onClick(async () => {
 								this.model.imgfileToLatex(path.join(this.vaultPath, file.path)).then(async (latex) => {
 									try {
@@ -118,14 +118,8 @@ export default class LatexOCR extends Plugin {
 			}
 		})
 
-		// Status Bar
-		this.statusBar = this.addStatusBarItem();
-		this.statusBar.createEl("span", { text: "LatexOCR ❌" });
-		this.updateStatusBar()
-		this.setStatusBarInterval(200)
-		if (!this.settings.showStatusBar || !this.settings.useLocalModel) {
-			this.statusBar.hide()
-		}
+		// Status bar, will automatically start based on settings
+		this.statusBar = new StatusBar(this)
 	}
 
 	onunload() {
@@ -143,88 +137,83 @@ export default class LatexOCR extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	// Update the status bar based on the connection to the LatexOCR server
-	// ✅: LatexOCR is up and accepting requests
-	// 🌐: LatexOCR is downloading the model from huggingface
-	// ⚙️: LatexOCR is loading the model
-	// ❌: LatexOCR isn't reachable
-	async updateStatusBar(): Promise<boolean> {
-		const [status, message] = await this.model.status()
-
-		switch (status) {
-			case Status.Ready:
-				this.statusBar.setText("LatexOCR ✅")
-				return true;
-
-			case Status.Downloading:
-				this.statusBar.setText("LatexOCR 🌐")
-				break;
-
-			case Status.Loading:
-				this.statusBar.setText("LatexOCR ⚙️")
-				break;
-
-			case Status.Misconfigured:
-				this.statusBar.setText("LatexOCR ❌")
-				break;
-
-			case Status.Unreachable:
-				this.statusBar.setText("LatexOCR ❌")
-				break;
-
-			default:
-				console.error(status)
-				break;
-		}
-		return false
-	}
-
-	// Call `updateStatusBar` with an initial delay of `number`.
-	// After this, `updateStatusBar` will be called every 5 seconds if the server was ready, 
-	// or every 200 ms if the server was not ready.
-	setStatusBarInterval(time: number) {
-		setTimeout(async () => {
-			const ready = await this.updateStatusBar()
-			if (ready) {
-				this.setStatusBarInterval(5000)
-			} else {
-				this.setStatusBarInterval(200)
-			}
-		}, time)
-	}
-
-
 	// Get a clipboard file, save it to disk temporarily,
-	// call the LatexOCR client. The result is pasted wherever the cursor is
+	// call the LatexOCR client.
 	async clipboardToText(editor: Editor) {
 		try {
 			const file = await navigator.clipboard.read();
-			if (file.length > 0) {
-				for (const ext of IMG_EXTS) {
-					if (file[0].types.includes(`image/${ext}`)) {
-						console.log(`found image in clipboard with mimetype image/${ext}`)
-						const blob = await file[0].getType(`image/${ext}`);
-						const buffer = Buffer.from(await blob.arrayBuffer());
-						const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${ext}`);
-						const from = editor.getCursor("from")
-						console.log(`latex_ocr: placing image at ${from}`)
-						try {
-							fs.writeFileSync(imgpath, buffer)
-							this.model.imgfileToLatex(imgpath).then(latex => {
-								editor.replaceRange(latex, from);
-								editor.scrollIntoView({ from: from, to: from })
-								new Notice(`🪄 Latex pasted to note`)
-							}).catch((err) => {
-								new Notice(`⚠️ ${err}`, 5000)
-							});
-						} catch (err) {
-							console.error(err)
-						}
-						return
-					}
+			if (file.length === 0) {
+				throw new Error("Couldn't find image in clipboard")
+			}
+			let filetype = null;
+			for (const ext of IMG_EXTS) {
+				if (file[0].types.includes(`image/${ext}`)) {
+					console.log(`latex_ocr: found image in clipboard with mimetype image/${ext}`)
+					filetype = ext;
+					break
 				}
 			}
-			new Notice("Couldn't find image in clipboard")
+
+			if (filetype === null) {
+				throw new Error("Couldn't find image in clipboard")
+			}
+
+			// Load clipboard image to buffer
+			const blob = await file[0].getType(`image/${filetype}`);
+			const buffer = Buffer.from(await blob.arrayBuffer());
+			const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
+			const from = editor.getCursor("from")
+			const waitMessage = `\\LaTeX \\text{ is being generated... } \\vphantom{${from.line}}`
+			const fullMessage = `${this.settings.delimiters}${waitMessage}${this.settings.delimiters}`
+
+			try {
+				console.log(`latex_ocr: placing image at line ${from.line}`)
+
+				// Abort if model isn't ready
+				let status = await this.model.status()
+				if (status.status !== Status.Ready) {
+					throw new Error(status.msg)
+				}
+
+				// Write generating message
+				editor.replaceSelection(fullMessage)
+
+				// Save image to file
+				fs.writeFileSync(imgpath, buffer)
+
+				// Get latex
+				const latex = await this.model.imgfileToLatex(imgpath)
+
+				// Find generating message again, starting search from original line
+				// (it may have moved up or down)
+				const firstLine = 0;
+				const lastLine = editor.lineCount() - 1;
+				let currLine = from.line;
+				let currOffset = 0; // 0, +1, -1, +2, -2
+
+				while (currLine >= firstLine && currLine <= lastLine) {
+					const text = editor.getLine(currLine);
+					const from = text.indexOf(fullMessage)
+					if (from !== -1) {
+						editor.replaceRange(latex, { line: currLine, ch: from }, { line: currLine, ch: from + fullMessage.length })
+						new Notice(`🪄 Latex pasted to note`)
+						return
+					}
+					currLine += currOffset;
+					if (currOffset <= 0) {
+						currOffset = (-currOffset + 1)
+					} else {
+						currOffset = -currOffset
+					}
+				}
+
+				// If the message isn't found, abort
+				throw new Error("Couldn't find paste target")
+			} catch (err) {
+				new Notice(`⚠️ ${err} `, 5000)
+				console.error(err)
+			}
+			return
 		} catch (err) {
 			new Notice(err.message)
 			console.error(err.name, err.message)

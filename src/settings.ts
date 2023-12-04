@@ -37,6 +37,21 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 })
             );
 
+        new Setting(containerEl)
+            .setName("Show status bar")
+            .setDesc("✅ online; ⚙️ loading; 🌐 downloading; 🔧 needs configuration; ❌ unreachable")
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.showStatusBar)
+                .onChange(async (value) => {
+                    if (value) {
+                        this.plugin.statusBar.show()
+                    } else {
+                        this.plugin.statusBar.hide()
+                    }
+                    this.plugin.settings.showStatusBar = value
+                    await this.plugin.saveSettings()
+                }));
+
         let ApiSettings: HTMLElement[]
         let LocalSettings: HTMLElement[]
         new Setting(containerEl)
@@ -52,14 +67,10 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         this.plugin.model = new LocalModel(this.plugin.settings, this.plugin.manifest)
                         ApiSettings.forEach(e => e.hide())
                         LocalSettings.forEach(e => e.show())
-                        if (this.plugin.settings.showStatusBar) {
-                            this.plugin.statusBar.show()
-                        }
                     } else {
                         this.plugin.model = new ApiModel(this.plugin.settings)
                         ApiSettings.forEach(e => e.show())
                         LocalSettings.forEach(e => e.hide())
-                        this.plugin.statusBar.hide()
                     }
                     this.plugin.model.load()
 
@@ -69,27 +80,27 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
 
         const checkStatus = () => {
-            this.plugin.model.status().then(([status, message]) => {
-                switch (status) {
+            this.plugin.model.status().then((status) => {
+                switch (status.status) {
                     case Status.Ready:
                         new Notice("✅ The server is reachable!")
                         break;
 
                     case Status.Downloading:
-                        new Notice(`🌐 ${message}`)
+                        new Notice(`🌐 ${status.msg}`)
                         break;
 
                     case Status.Loading:
-                        new Notice(`⚙️ ${message}`)
+                        new Notice(`⚙️ ${status.msg}`)
                         break;
 
                     case Status.Misconfigured:
-                        new Notice(`🛠️ ${message}`)
+                        new Notice(`🔧 ${status.msg}`)
                         break;
 
                     case Status.Unreachable:
                     default:
-                        new Notice(`❌ ${message}`)
+                        new Notice(`❌ ${status.msg}`)
                         break;
                 }
             })
@@ -112,7 +123,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         key = value
                     }
 
-                    new Notice("🛠️ Api key saved")
+                    new Notice("🔧 Api key saved")
                     this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
                     this.plugin.settings.hfApiKey = key;
                     (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
@@ -152,21 +163,6 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     .onClick(async (evt) => {
                         new Notice("⚙️ Starting server...", 5000)
                         this.plugin.model.unload()
-                    })).settingEl,
-
-            new Setting(containerEl)
-                .setName("Show status bar")
-                .setDesc("✅ online; ⚙️ loading; 🌐 downloading; 🛠️ needs configuration; ❌ unreachable")
-                .addToggle(toggle => toggle
-                    .setValue(this.plugin.settings.showStatusBar)
-                    .onChange(async (value) => {
-                        if (value) {
-                            this.plugin.statusBar.show()
-                        } else {
-                            this.plugin.statusBar.hide()
-                        }
-                        this.plugin.settings.showStatusBar = value
-                        await this.plugin.saveSettings()
                     })).settingEl,
 
 
