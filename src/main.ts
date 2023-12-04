@@ -47,7 +47,6 @@ export default class LatexOCR extends Plugin {
 	pluginPath: string;
 	statusBar: StatusBar;
 	model: Model;
-	clipboardTmpDir: string;
 
 	async onload() {
 		// Load settings & initialize path values
@@ -69,9 +68,8 @@ export default class LatexOCR extends Plugin {
 		this.model.load()
 
 		// Folder where temporary pasted files are stored
-		this.clipboardTmpDir = path.join(this.vaultPath, "/.latex_ocr_clipboard/")
 		try {
-			await fs.promises.mkdir(this.clipboardTmpDir);
+			await fs.promises.mkdir(path.join(this.pluginPath, "/.clipboard_images/"));
 		} catch (err) {
 			if (!err.message.contains("EEXIST")) {
 				console.error(err)
@@ -180,7 +178,7 @@ export default class LatexOCR extends Plugin {
 				// Save image to file
 				const blob = await file[0].getType(`image/${filetype}`);
 				const buffer = Buffer.from(await blob.arrayBuffer());
-				const imgpath = path.join(this.clipboardTmpDir, `/pasted_image.${filetype}`);
+				const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
 				fs.writeFileSync(imgpath, buffer)
 
 				// Get latex
