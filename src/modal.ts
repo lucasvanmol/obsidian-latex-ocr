@@ -2,6 +2,7 @@ import clipboard from "clipboardy";
 import LatexOCR from "main";
 import { Modal, App, Setting, TFile, Notice } from "obsidian";
 import * as path from "path";
+import { picker } from "utils";
 
 export class LatexOCRModal extends Modal {
     plugin: LatexOCR
@@ -22,29 +23,20 @@ export class LatexOCRModal extends Modal {
         })
         const img = imageContainer.createEl("img")
 
-        const fileIn: any = contentEl.createEl("input", { type: "file", attr: { style: "display: none;", accept: "image/*" } })
-
         new Setting(contentEl)
             .setName("Open image")
-            .addButton(button => button
-                .setButtonText("Browse")
-                .onClick(evt => {
-                    fileIn.click()
-                }));
-
-
-        fileIn.addEventListener('change', () => {
-            const selectedFile = fileIn.files[0];
-            if (selectedFile) {
-                this.imagePath = selectedFile.path;
-                const tfile = this.app.vault.getAbstractFileByPath(path.relative(this.plugin.vaultPath, selectedFile.path));
-                img.setAttr("src", this.app.vault.getResourcePath(tfile as TFile))
-            }
-        });
-
-        new Setting(contentEl)
+            .addExtraButton(cb => cb
+                .setIcon("folder")
+                .setTooltip("Browse")
+                .onClick(async () => {
+                    let file = await picker("Open image", ["openFile"]) as string;
+                    this.imagePath = file
+                    const tfile = this.app.vault.getAbstractFileByPath(path.relative(this.plugin.vaultPath, file));
+                    img.setAttr("src", this.app.vault.getResourcePath(tfile as TFile))
+                }))
             .addButton(button => button
                 .setButtonText("Convert to Latex")
+                .setCta()
                 .onClick(evt => {
                     if (this.imagePath) {
                         this.plugin.model.imgfileToLatex(this.imagePath).then(async (latex) => {
@@ -55,6 +47,8 @@ export class LatexOCRModal extends Modal {
                                 new Notice(`⚠️ Couldn't copy to clipboard because document isn't focused`)
                             }
                             new Notice(`🪄 Latex copied to clipboard`)
+                        }).catch(err => {
+                            new Notice(`⚠️ ${err}`)
                         })
                     } else {
                         new Notice("⚠️ Select an image first")

@@ -4,6 +4,7 @@ import { LocalModel } from "models/local_model";
 import ApiModel from "models/online_model";
 import { PluginSettingTab, App, Setting, Notice, TextComponent, normalizePath } from "obsidian";
 import safeStorage from "safeStorage";
+import { picker } from "utils";
 
 const obfuscateApiKey = (apiKey = ''): string =>
     apiKey.length > 0 ? apiKey.replace(/^(.{3})(.*)(.{4})$/, '$1****$3') : ''
@@ -21,7 +22,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        // GENERAL SETTINGS //
+        ///// GENERAL SETTINGS /////
 
         new Setting(containerEl)
             .setName('Formatting')
@@ -39,7 +40,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Show status bar")
-            .setDesc("✅ online; ⚙️ loading; 🌐 downloading; 🔧 needs configuration; ❌ unreachable")
+            .setDesc("✅ online / ⚙️ loading / 🌐 downloading / 🔧 needs configuration / ❌ unreachable")
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.showStatusBar)
                 .onChange(async (value) => {
@@ -51,11 +52,6 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     this.plugin.settings.showStatusBar = value
                     await this.plugin.saveSettings()
                 }));
-
-        // eslint-disable-next-line prefer-const
-        let ApiSettings: HTMLElement[]
-        // eslint-disable-next-line prefer-const
-        let LocalSettings: HTMLElement[]
 
         new Setting(containerEl)
             .setName("Use local model")
@@ -111,106 +107,123 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             })
         }
 
-        // MODEL SPECIFIC SETTINGS //
         containerEl.createEl("h5", { text: "Configuration" })
+
+        ///// API MODEL SETTINGS /////
 
         const KeyDisplay = new Setting(containerEl)
             .setName('Current API Key')
             .addText(text => text
                 .setPlaceholder(this.plugin.settings.obfuscatedKey).setDisabled(true))
-        ApiSettings = [
-            new Setting(containerEl)
-                .setName('Set API Key')
-                .setDesc('Hugging face API key. See https://huggingface.co/docs/api-inference/quicktour#get-your-api-token.')
-                .addText(text => text
-                    .onChange(async value => {
-                        let key
-                        if (safeStorage.isEncryptionAvailable()) {
-                            key = safeStorage.encryptString(value)
-                        } else {
-                            key = value
-                        }
+        const apiKeyInput = new Setting(containerEl)
+            .setName('Set API Key')
+            .setDesc('Hugging face API key. See https://huggingface.co/docs/api-inference/quicktour#get-your-api-token.')
+            .addText(text => text
+                .onChange(async value => {
+                    let key
+                    if (safeStorage.isEncryptionAvailable()) {
+                        key = safeStorage.encryptString(value)
+                    } else {
+                        key = value
+                    }
 
-                        new Notice("🔧 Api key saved")
-                        this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
-                        this.plugin.settings.hfApiKey = key;
-                        (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
-                        await this.plugin.saveSettings()
-                    }).inputEl.setAttr("type", "password"))
-                .settingEl,
-
-            KeyDisplay.settingEl]
+                    new Notice("🔧 Api key saved")
+                    this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
+                    this.plugin.settings.hfApiKey = key;
+                    (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
+                    await this.plugin.saveSettings()
+                }).inputEl.setAttr("type", "password"))
 
 
-        LocalSettings = [
-            new Setting(containerEl)
-                .setName('Python path')
-                .setDesc("Path to Python installation. You need to have the `latex_ocr_server` package installed, see the project's README for more information.\
+        const ApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
+
+
+        ///// LOCAL MODEL SETTINGS /////
+
+        const pythonPath = new Setting(containerEl)
+            .setName('Python path')
+            .setDesc("Path to Python installation. You need to have the `latex_ocr_server` package installed, see the project's README for more information.\
 			Note that changing the path requires a server restart in order to take effect.")
-                .addText(text => text
-                    .setPlaceholder('path/to/python.exe')
-                    .setValue(this.plugin.settings.pythonPath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.pythonPath = normalizePath(value);
-                        await this.plugin.saveSettings();
-                    })).settingEl,
+            .addExtraButton(cb => cb
+                .setIcon("folder")
+                .setTooltip("Browse")
+                .onClick(async () => {
+                    let file = await picker("Open Python path", ["openFile"]) as string;
+                    (pythonPath.components[1] as TextComponent).setValue(file)
+                }))
+            .addText(text => text
+                .setPlaceholder('path/to/python.exe')
+                .setValue(this.plugin.settings.pythonPath)
+                .onChange(async (value) => {
+                    this.plugin.settings.pythonPath = normalizePath(value);
+                    await this.plugin.saveSettings();
+                }))
 
-            new Setting(containerEl)
-                .setName('Server status')
-                .setDesc("LatexOCR runs a python script in the background that can process OCR requests. \
+        const serverStatus = new Setting(containerEl)
+            .setName('Server status')
+            .setDesc("LatexOCR runs a python script in the background that can process OCR requests. \
 				Use these settings to check it's status, or restart it. \
 				Note that restarting can take a few seconds. If the model isn't cached, it needs to be downloaded first (~1.4 GB).")
-                .addButton(button => button
-                    .setButtonText("Check status")
-                    .setCta()
-                    .onClick(evt => {
-                        checkStatus()
-                    })
-                )
-                .addButton(button => button
-                    .setButtonText("(Re)start server")
-                    .onClick(async (evt) => {
-                        new Notice("⚙️ Starting server...", 5000)
-                        this.plugin.model.unload()
-                    })).settingEl,
+            .addButton(button => button
+                .setButtonText("Check status")
+                .setCta()
+                .onClick(evt => {
+                    checkStatus()
+                })
+            )
+            .addButton(button => button
+                .setButtonText("(Re)start server")
+                .onClick(async (evt) => {
+                    new Notice("⚙️ Starting server...", 5000)
+                    this.plugin.model.unload()
+                }))
 
 
-            new Setting(containerEl)
-                .setName('Port')
-                .setDesc('Port to run the LatexOCR server on. Note that a server restart is required in order for this to take effect.')
-                .addText(text => text
-                    .setValue(this.plugin.settings.port)
-                    .onChange(async (value) => {
-                        this.plugin.settings.port = value;
-                        await this.plugin.saveSettings();
-                    })).settingEl,
+        const port = new Setting(containerEl)
+            .setName('Port')
+            .setDesc('Port to run the LatexOCR server on. Note that a server restart is required in order for this to take effect.')
+            .addText(text => text
+                .setValue(this.plugin.settings.port)
+                .onChange(async (value) => {
+                    this.plugin.settings.port = value;
+                    await this.plugin.saveSettings();
+                }))
 
-            new Setting(containerEl)
-                .setName("Start server on launch")
-                .setDesc("The LatexOCR server consumes quite a lot of memory. If you don't use it often, feel free to disable this.\
+        const startOnLaunch = new Setting(containerEl)
+            .setName("Start server on launch")
+            .setDesc("The LatexOCR server consumes quite a lot of memory. If you don't use it often, feel free to disable this.\
 				You will need to (re)start the server manually if you wish to use the plugin.")
-                .addToggle(toggle => toggle
-                    .setValue(this.plugin.settings.startServerOnLoad)
-                    .onChange(async (value) => {
-                        this.plugin.settings.startServerOnLoad = value;
-                        await this.plugin.saveSettings();
-                    })).settingEl,
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.startServerOnLoad)
+                .onChange(async (value) => {
+                    this.plugin.settings.startServerOnLoad = value;
+                    await this.plugin.saveSettings();
+                }))
 
-            new Setting(containerEl)
-                .setName("Cache dir")
-                .setDesc("The directory where the model is saved. By default this is in `Vault/.obsidian/plugins/obsidian-latex-ocr/model_cache`. \
+        const cacheDir = new Setting(containerEl)
+            .setName("Cache dir")
+            .setDesc("The directory where the model is saved. By default this is in `Vault/.obsidian/plugins/obsidian-latex-ocr/model_cache`. \
 					Note that changing this will not delete the old cache, and require the model to be redownloaded. \
 					The server must be restarted for this to take effect.")
-                .addText(text => text
-                    .setValue(this.plugin.settings.cacheDirPath)
-                    .onChange(async (value) => {
-                        const path = normalizePath(value)
-                        if (path !== "") {
-                            this.plugin.settings.cacheDirPath = path
-                            await this.plugin.saveSettings();
-                        }
-                    })).settingEl
-        ]
+            .addExtraButton(cb => cb
+                .setIcon("folder")
+                .setTooltip("Browse")
+                .onClick(async () => {
+                    let folder = await picker("Open cache directory", ["openDirectory"]) as string;
+                    (cacheDir.components[1] as TextComponent).setValue(folder)
+                }))
+            .addText(text => text
+                .setValue(this.plugin.settings.cacheDirPath)
+                .onChange(async (value) => {
+                    const path = normalizePath(value)
+                    if (path !== "") {
+                        this.plugin.settings.cacheDirPath = path
+                        await this.plugin.saveSettings();
+                    }
+                }))
+
+        // eslint-disable-next-line prefer-const
+        const LocalSettings: HTMLElement[] = [pythonPath.settingEl, serverStatus.settingEl, port.settingEl, startOnLaunch.settingEl, cacheDir.settingEl]
 
         if (this.plugin.settings.useLocalModel) {
             ApiSettings.forEach(e => e.hide())
