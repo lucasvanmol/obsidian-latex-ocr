@@ -76,3 +76,6 @@ python -m latex_ocr_server info --gpu-available
 
 If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
 
+## Attribution
+
+Massive thanks to [NormXU](https://github.com/NormXU/nougat-latex-ocr/) for training and releasing the model.
