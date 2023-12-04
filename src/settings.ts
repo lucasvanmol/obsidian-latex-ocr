@@ -22,6 +22,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         containerEl.empty();
 
         // GENERAL SETTINGS //
+        containerEl.createEl("h5", { text: "General" })
 
         new Setting(containerEl)
             .setName('Formatting')
@@ -65,10 +66,12 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
                     if (value) {
                         this.plugin.model = new LocalModel(this.plugin.settings, this.plugin.manifest)
+
                         ApiSettings.forEach(e => e.hide())
                         LocalSettings.forEach(e => e.show())
                     } else {
                         this.plugin.model = new ApiModel(this.plugin.settings)
+
                         ApiSettings.forEach(e => e.show())
                         LocalSettings.forEach(e => e.hide())
                     }
@@ -107,34 +110,40 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         }
 
         // MODEL SPECIFIC SETTINGS //
+        const apiHeading = containerEl.createEl("h5", { text: "API model configuration" })
+
         const KeyDisplay = new Setting(containerEl)
             .setName('Current API Key')
             .addText(text => text
                 .setPlaceholder(this.plugin.settings.obfuscatedKey).setDisabled(true))
-        ApiSettings = [new Setting(containerEl)
-            .setName('Set API Key')
-            .setDesc('Hugging face API key. See https://huggingface.co/docs/api-inference/quicktour#get-your-api-token.')
-            .addText(text => text
-                .onChange(async value => {
-                    let key
-                    if (safeStorage.isEncryptionAvailable()) {
-                        key = safeStorage.encryptString(value)
-                    } else {
-                        key = value
-                    }
+        ApiSettings = [
+            apiHeading,
+            new Setting(containerEl)
+                .setName('Set API Key')
+                .setDesc('Hugging face API key. See https://huggingface.co/docs/api-inference/quicktour#get-your-api-token.')
+                .addText(text => text
+                    .onChange(async value => {
+                        let key
+                        if (safeStorage.isEncryptionAvailable()) {
+                            key = safeStorage.encryptString(value)
+                        } else {
+                            key = value
+                        }
 
-                    new Notice("🔧 Api key saved")
-                    this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
-                    this.plugin.settings.hfApiKey = key;
-                    (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
-                    await this.plugin.saveSettings()
-                }).inputEl.setAttr("type", "password"))
-            .settingEl,
+                        new Notice("🔧 Api key saved")
+                        this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
+                        this.plugin.settings.hfApiKey = key;
+                        (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
+                        await this.plugin.saveSettings()
+                    }).inputEl.setAttr("type", "password"))
+                .settingEl,
 
-        KeyDisplay.settingEl]
+            KeyDisplay.settingEl]
 
 
         LocalSettings = [
+            containerEl.createEl("h5", { text: "Local model configuration" }),
+
             new Setting(containerEl)
                 .setName('Python path')
                 .setDesc("Path to Python installation. You need to have the `latex_ocr_server` package installed, see the project's README for more information.\
