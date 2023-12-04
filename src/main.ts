@@ -54,7 +54,7 @@ export default class LatexOCR extends Plugin {
 		this.addSettingTab(new LatexOCRSettingsTab(this.app, this));
 
 		this.vaultPath = (this.app.vault.adapter as FileSystemAdapter).getBasePath()
-		this.pluginPath = path.join(this.vaultPath, ".obsidian/plugins/obsidian-latex-ocr")
+		this.pluginPath = path.join(this.vaultPath, ".obsidian/plugins/latex-ocr")
 		if (this.settings.cacheDirPath === "") {
 			this.settings.cacheDirPath = path.resolve(this.pluginPath, "model_cache")
 			await this.saveSettings()
