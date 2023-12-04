@@ -14,6 +14,8 @@ export class LocalModel implements Model {
     last_download_update: string;
     plugin_settings: LatexOCRSettings;
     manifest: PluginManifest;
+    statusCheckIntervalLoading = 300;
+    statusCheckIntervalReady = 5000;
 
     constructor(settings: LatexOCRSettings, manifest: PluginManifest) {
         this.plugin_settings = settings
@@ -69,23 +71,23 @@ export class LocalModel implements Model {
         const timeout_msecs = 200;
         const timeout = new Date(new Date().getTime() + timeout_msecs);
 
-        return new Promise<[Status, string]>((resolve, reject) => this.client.waitForReady(timeout, (err) => {
+        return new Promise<{ status: Status, msg: string }>((resolve, reject) => this.client.waitForReady(timeout, (err) => {
             if (err) {
                 this.checkPythonInstallation().then(() => {
-                    resolve([Status.Unreachable, `The server wasn't reachable before the deadline (${timeout_msecs}ms)`])
+                    resolve({ status: Status.Unreachable, msg: `The server wasn't reachable before the deadline (${timeout_msecs}ms)` })
                 }).catch((pyerr) =>
-                    resolve([Status.Misconfigured, pyerr.message])
+                    resolve({ status: Status.Misconfigured, msg: pyerr.message })
                 )
 
             } else {
                 this.client.isReady({}, (err, reply) => {
                     if (reply?.isReady) {
-                        resolve([Status.Ready, "Server ready"])
+                        resolve({ status: Status.Ready, msg: "Server ready" })
                     } else {
                         if (this.last_download_update) {
-                            resolve([Status.Downloading, `The server is still downloading the model: ${this.last_download_update}`])
+                            resolve({ status: Status.Downloading, msg: `The server is still downloading the model: ${this.last_download_update}` })
                         } else {
-                            resolve([Status.Loading, "The server is still loading the model"])
+                            resolve({ status: Status.Loading, msg: "The server is still loading the model" })
                         }
                     }
                 });
