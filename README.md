@@ -33,6 +33,10 @@ By default, this plugin uses the HuggingFace inference API. Here's how you get y
 - Create a `read` access token in your [Hugging Face profile settings](https://huggingface.co/settings/tokens). If you already have other access tokens I recommend creating one specifically for this plugin.
 - After enabling the plugin in Obsidian, head to the Latex OCR settings tab, and input the API key you generated.
 
+### Limitations
+- The inference API is a free service by huggingface, and as such it requires some time to be provisioned. Subsequent requests should be a lot faster.
+- If you would be interested in a low-cost subscription-based service that would get rid of this annoying waiting period, please react to [the related issue here](https://github.com/lucasvanmol/obsidian-latex-ocr/issues/13). I will consider building it if there is enough demand to pay for the server costs.
+
 ## Run Locally
 
 Alternatively, you can run the model locally. This requires installing an accompanying [python package](https://github.com/lucasvanmol/latex-ocr-server). Install it using `pip` (or, preferably `pipx`):
