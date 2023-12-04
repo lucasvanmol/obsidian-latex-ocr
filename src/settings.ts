@@ -4,7 +4,6 @@ import { LocalModel } from "models/local_model";
 import ApiModel from "models/online_model";
 import { PluginSettingTab, App, Setting, Notice, TextComponent, normalizePath } from "obsidian";
 import safeStorage from "safeStorage";
-import { dialog } from 'electron';
 
 const obfuscateApiKey = (apiKey = ''): string =>
     apiKey.length > 0 ? apiKey.replace(/^(.{3})(.*)(.{4})$/, '$1****$3') : ''
@@ -53,8 +52,11 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     await this.plugin.saveSettings()
                 }));
 
+        // eslint-disable-next-line prefer-const
         let ApiSettings: HTMLElement[]
+        // eslint-disable-next-line prefer-const
         let LocalSettings: HTMLElement[]
+
         new Setting(containerEl)
             .setName("Use local model")
             .setDesc("Use local model with python. \

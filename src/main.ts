@@ -159,19 +159,15 @@ export default class LatexOCR extends Plugin {
 				throw new Error("Couldn't find image in clipboard")
 			}
 
-			// Load clipboard image to buffer
-			const blob = await file[0].getType(`image/${filetype}`);
-			const buffer = Buffer.from(await blob.arrayBuffer());
-			const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
 			const from = editor.getCursor("from")
 			const waitMessage = `\\LaTeX \\text{ is being generated... } \\vphantom{${from.line}}`
 			const fullMessage = `${this.settings.delimiters}${waitMessage}${this.settings.delimiters}`
 
 			try {
-				console.log(`latex_ocr: placing image at line ${from.line}`)
+				console.log(`latex_ocr: recieved paste command at line ${from.line}`)
 
 				// Abort if model isn't ready
-				let status = await this.model.status()
+				const status = await this.model.status()
 				if (status.status !== Status.Ready) {
 					throw new Error(status.msg)
 				}
@@ -180,6 +176,9 @@ export default class LatexOCR extends Plugin {
 				editor.replaceSelection(fullMessage)
 
 				// Save image to file
+				const blob = await file[0].getType(`image/${filetype}`);
+				const buffer = Buffer.from(await blob.arrayBuffer());
+				const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
 				fs.writeFileSync(imgpath, buffer)
 
 				// Get latex

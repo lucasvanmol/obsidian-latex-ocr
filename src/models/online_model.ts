@@ -22,50 +22,51 @@ export default class ApiModel implements Model {
         } else {
             this.apiKey = settings.hfApiKey as string
         }
-    };
+    }
 
 
     load() {
         console.log("latex_ocr: API model loaded.")
-    };
+    }
 
-    unload() { };
+    unload() { }
 
     async imgfileToLatex(filepath: string): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
-            const file = path.parse(filepath)
-            const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
+        const file = path.parse(filepath)
+        const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
 
-            const data = fs.readFileSync(filepath);
-            const response = await fetch(
-                "https://api-inference.huggingface.co/models/Norm/nougat-latex-base",
-                {
-                    headers: { Authorization: `Bearer ${this.apiKey}` },
-                    method: "POST",
-                    body: data,
-                }
-            );
-
-            console.log(`latex_ocr_api: ${JSON.stringify(response)}`)
-            if (response.ok) {
-                const result = await response.json();
-                const latex = result[0].generated_text
-                if (latex) {
-                    const d = this.settings.delimiters
-                    resolve(`${d}${latex}${d}`)
-                } else {
-                    reject(`Malformed response ${result}`)
-                }
-            } else if (response.status === 503) {
-                reject("Inference API is being provisioned, please try again in a few seconds")
-            } else if (response.status === 400 || response.status === 401) {
-                reject("Unauthorized API key")
-            } else {
-                reject(`Got ${response.status}: ${response.statusText}`)
+        const data = fs.readFileSync(filepath);
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/Norm/nougat-latex-base",
+            {
+                headers: { Authorization: `Bearer ${this.apiKey}` },
+                method: "POST",
+                body: data,
             }
-            setTimeout(() => notice.hide(), 1000)
-        })
-    };
+        );
+
+        console.log(`latex_ocr_api: Recieved status ${response.status}`)
+
+        setTimeout(() => notice.hide(), 1000)
+        if (response.ok) {
+            const result = await response.json();
+            console.log(`latex_ocr_api: ${JSON.stringify(result)}`)
+            const latex = result[0].generated_text
+            if (latex) {
+                const d = this.settings.delimiters
+                return (`${d}${latex}${d}`)
+            } else {
+                throw new Error(`Malformed response ${result}`)
+            }
+        } else if (response.status === 503) {
+            throw new Error("Inference API is being provisioned, please try again in a few seconds")
+        } else if (response.status === 400 || response.status === 401) {
+            throw new Error("Unauthorized API key")
+        } else {
+            throw new Error(`Got ${response.status}: ${response.statusText}`)
+        }
+    }
+
 
     async status() {
         if (this.apiKey === "") {
@@ -77,7 +78,7 @@ export default class ApiModel implements Model {
                 headers: { Authorization: `Bearer ${this.apiKey}` },
                 method: "GET",
             }
-        );
+        )
 
         if (response.ok) {
             // Upload dummy image
@@ -103,4 +104,4 @@ export default class ApiModel implements Model {
             return { status: Status.Unreachable, msg: `Got ${response.status}: ${response.statusText}` }
         }
     }
-};
+}

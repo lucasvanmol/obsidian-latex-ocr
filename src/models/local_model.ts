@@ -1,6 +1,5 @@
 import { ChildProcess, spawn } from 'child_process';
-import { PathLike } from 'fs';
-import LatexOCR, { LatexOCRSettings } from 'main';
+import { LatexOCRSettings } from 'main';
 import Model, { Status } from 'models/model';
 import * as path from 'path'
 import { LatexOCRClient } from 'protos/latex_ocr';
@@ -24,7 +23,7 @@ export class LocalModel implements Model {
 
     reloadSettings(settings: LatexOCRSettings) {
         this.plugin_settings = settings
-    };
+    }
 
     async load() {
         // RPC Client
@@ -58,7 +57,7 @@ export class LocalModel implements Model {
                 } else {
                     console.log(`latex_ocr_server: ${latex?.latex}`);
                     if (latex) {
-                        let result = `${d}${latex.latex}${d}`;
+                        const result = `${d}${latex.latex}${d}`;
                         resolve(result);
                     }
                 }
