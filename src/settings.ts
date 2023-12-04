@@ -4,6 +4,7 @@ import { LocalModel } from "models/local_model";
 import ApiModel from "models/online_model";
 import { PluginSettingTab, App, Setting, Notice, TextComponent, normalizePath } from "obsidian";
 import safeStorage from "safeStorage";
+import { dialog } from 'electron';
 
 const obfuscateApiKey = (apiKey = ''): string =>
     apiKey.length > 0 ? apiKey.replace(/^(.{3})(.*)(.{4})$/, '$1****$3') : ''
@@ -22,7 +23,6 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         containerEl.empty();
 
         // GENERAL SETTINGS //
-        containerEl.createEl("h5", { text: "General" })
 
         new Setting(containerEl)
             .setName('Formatting')
@@ -110,14 +110,13 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         }
 
         // MODEL SPECIFIC SETTINGS //
-        const apiHeading = containerEl.createEl("h5", { text: "API model configuration" })
+        containerEl.createEl("h5", { text: "Configuration" })
 
         const KeyDisplay = new Setting(containerEl)
             .setName('Current API Key')
             .addText(text => text
                 .setPlaceholder(this.plugin.settings.obfuscatedKey).setDisabled(true))
         ApiSettings = [
-            apiHeading,
             new Setting(containerEl)
                 .setName('Set API Key')
                 .setDesc('Hugging face API key. See https://huggingface.co/docs/api-inference/quicktour#get-your-api-token.')
@@ -142,8 +141,6 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
 
         LocalSettings = [
-            containerEl.createEl("h5", { text: "Local model configuration" }),
-
             new Setting(containerEl)
                 .setName('Python path')
                 .setDesc("Path to Python installation. You need to have the `latex_ocr_server` package installed, see the project's README for more information.\
@@ -163,6 +160,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 				Note that restarting can take a few seconds. If the model isn't cached, it needs to be downloaded first (~1.4 GB).")
                 .addButton(button => button
                     .setButtonText("Check status")
+                    .setCta()
                     .onClick(evt => {
                         checkStatus()
                     })
@@ -211,7 +209,6 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         }
                     })).settingEl
         ]
-
 
         if (this.plugin.settings.useLocalModel) {
             ApiSettings.forEach(e => e.hide())

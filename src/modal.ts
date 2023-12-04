@@ -39,7 +39,6 @@ export class LatexOCRModal extends Modal {
                 this.imagePath = selectedFile.path;
                 const tfile = this.app.vault.getAbstractFileByPath(path.relative(this.plugin.vaultPath, selectedFile.path));
                 img.setAttr("src", this.app.vault.getResourcePath(tfile as TFile))
-
             }
         });
 
