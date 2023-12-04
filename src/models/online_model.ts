@@ -46,7 +46,7 @@ export default class ApiModel implements Model {
                 }
             );
 
-            console.log(`latex_ocr_api: ${response}`)
+            console.log(`latex_ocr_api: ${JSON.stringify(response)}`)
             if (response.ok) {
                 const result = await response.json();
                 const latex = result[0].generated_text
