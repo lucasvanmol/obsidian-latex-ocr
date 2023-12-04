@@ -124,6 +124,7 @@ export default class LatexOCR extends Plugin {
 
 	onunload() {
 		this.model.unload()
+		this.statusBar.stop()
 	}
 
 	async loadSettings() {

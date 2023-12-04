@@ -12,16 +12,18 @@ export enum Status {
 export class StatusBar {
     span: HTMLSpanElement;
     plugin: LatexOCR
+    private stopped: boolean;
 
     constructor(plugin: LatexOCR) {
         this.plugin = plugin;
         this.span = plugin.addStatusBarItem();
         this.span.createEl("span", { text: "LatexOCR ❌" });
         this.updateStatusBar()
-        this.setStatusBarInterval(plugin.model.statusCheckIntervalLoading)
         if (!plugin.settings.showStatusBar) {
             this.hide()
         }
+        this.stopped = false;
+        this.startStatusBar()
     }
 
     // Update the status bar based on the connection to the LatexOCR server
@@ -31,7 +33,7 @@ export class StatusBar {
     // ❌: LatexOCR isn't reachable
     async updateStatusBar(): Promise<boolean> {
         const status = await this.plugin.model.status()
-        console.log(`latex_ocr: sent status check, got ${JSON.stringify(status)}`)
+        console.log(`latex_ocr: sent status check to ${this.plugin.model.constructor.name}, got ${JSON.stringify(status)}`)
 
         switch (status.status) {
             case Status.Ready:
@@ -64,16 +66,17 @@ export class StatusBar {
     // Call `updateStatusBar` with an initial delay of `number`.
     // After this, `updateStatusBar` based on invterval values
     // Should only be called once.
-    private setStatusBarInterval(time: number) {
-        setTimeout(async () => {
+    private async startStatusBar() {
+        while (!this.stopped) {
             const ready = await this.updateStatusBar()
             if (ready) {
-                this.setStatusBarInterval(this.plugin.model.statusCheckIntervalReady)
+                await sleep(this.plugin.model.statusCheckIntervalReady)
             } else {
-                this.setStatusBarInterval(this.plugin.model.statusCheckIntervalLoading)
+                await sleep(this.plugin.model.statusCheckIntervalLoading)
             }
-        }, time)
+        }
     }
+
 
     hide() {
         this.span.hide()
@@ -81,6 +84,10 @@ export class StatusBar {
 
     show() {
         this.span.show()
+    }
+
+    stop() {
+        this.stopped = true;
     }
 }
 
