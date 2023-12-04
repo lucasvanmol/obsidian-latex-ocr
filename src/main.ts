@@ -181,8 +181,16 @@ export default class LatexOCR extends Plugin {
 				const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
 				fs.writeFileSync(imgpath, buffer)
 
-				// Get latex
-				const latex = await this.model.imgfileToLatex(imgpath)
+				let latex;
+				try {
+					// Get latex
+					latex = await this.model.imgfileToLatex(imgpath)
+				} catch (err) {
+					// If err, return empty string so that we erase `fullMessage`
+					latex = ""
+					new Notice(`⚠️ ${err} `, 5000)
+					console.error(err)
+				}
 
 				// Find generating message again, starting search from original line
 				// (it may have moved up or down)
@@ -196,7 +204,9 @@ export default class LatexOCR extends Plugin {
 					const from = text.indexOf(fullMessage)
 					if (from !== -1) {
 						editor.replaceRange(latex, { line: currLine, ch: from }, { line: currLine, ch: from + fullMessage.length })
-						new Notice(`🪄 Latex pasted to note`)
+						if (latex !== "") {
+							new Notice(`🪄 Latex pasted to note`)
+						}
 						return
 					}
 					currLine += currOffset;
