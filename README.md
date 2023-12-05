@@ -18,9 +18,9 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ### Manual Installation
 
-- Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`
+- Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/latex-ocr/`
 - Navigate to this project's "Releases" tab
-- Copy over `main.js`, `styles.css` and `manifest.json`, to your vault `VaultFolder/.obsidian/plugins/obsidian-latex-ocr/`.
+- Copy over `main.js`, `styles.css` and `manifest.json`, to your vault `VaultFolder/.obsidian/plugins/latex-ocr/`.
 
 ### BRAT
 
