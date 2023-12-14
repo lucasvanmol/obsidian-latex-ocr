@@ -7,6 +7,5 @@
 	"author": "Lucas Van Mol",
 	"authorUrl": "github.com/lucasvanmol",
 	"fundingUrl": "https://www.buymeacoffee.com/lucasvanmol",
-	"isDesktopOnly": true,
-	"latexOcrServerVersion": "0.1.0"
+	"isDesktopOnly": true
 }

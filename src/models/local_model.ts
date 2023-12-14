@@ -7,18 +7,18 @@ import * as grpc from '@grpc/grpc-js';
 import { Notice, PluginManifest } from 'obsidian';
 
 const IMG_EXTS = ["png", "jpg", "jpeg", "bmp", "dib", "eps", "gif", "ppm", "pbm", "pgm", "pnm", "webp"]
+const SCRIPT_VERSION = "0.1.0"
+
 export class LocalModel implements Model {
     client: LatexOCRClient
     serverProcess: ChildProcess;
     last_download_update: string;
     plugin_settings: LatexOCRSettings;
-    manifest: PluginManifest;
     statusCheckIntervalLoading = 300;
     statusCheckIntervalReady = 5000;
 
-    constructor(settings: LatexOCRSettings, manifest: PluginManifest) {
+    constructor(settings: LatexOCRSettings) {
         this.plugin_settings = settings
-        this.manifest = manifest
     }
 
     reloadSettings(settings: LatexOCRSettings) {
@@ -104,7 +104,7 @@ export class LocalModel implements Model {
 
                 pythonProcess.stdout.on('data', data => {
                     const [prog, version] = data.toString().split(" ")
-                    console.log(`${prog} version ${version} (required version: ${(this.manifest as any).latexOcrServerVersion})`)
+                    console.log(`${prog} version ${version} (required version: ${SCRIPT_VERSION})`)
                 })
                 pythonProcess.stderr.on('data', data => {
                     console.error(data.toString())

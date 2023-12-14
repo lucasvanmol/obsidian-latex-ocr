@@ -63,7 +63,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     this.plugin.model.unload()
 
                     if (value) {
-                        this.plugin.model = new LocalModel(this.plugin.settings, this.plugin.manifest)
+                        this.plugin.model = new LocalModel(this.plugin.settings)
 
                         ApiSettings.forEach(e => e.hide())
                         LocalSettings.forEach(e => e.show())
