@@ -73,7 +73,7 @@ export default class LatexOCR extends Plugin {
 
 		// Folder where temporary pasted files are stored
 		try {
-			await fs.promises.mkdir(path.join(this.pluginPath, "/.clipboard_images/"));
+			await fs.promises.mkdir(path.join(this.vaultPath, this.pluginPath, "/.clipboard_images/"));
 		} catch (err) {
 			if (!err.message.contains("EEXIST")) {
 				console.error(err)
@@ -182,10 +182,10 @@ export default class LatexOCR extends Plugin {
 				// Save image to file
 				const blob = await file[0].getType(`image/${filetype}`);
 				const buffer = Buffer.from(await blob.arrayBuffer());
-				const imgpath = path.join(this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
+				const imgpath = path.join(this.vaultPath, this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
 				fs.writeFileSync(imgpath, buffer)
 
-				let latex;
+				let latex: string;
 				try {
 					// Get latex
 					latex = await this.model.imgfileToLatex(imgpath)

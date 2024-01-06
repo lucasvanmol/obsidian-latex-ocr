@@ -24,6 +24,7 @@
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "^1.9.9",
+		"@huggingface/inference": "^2.6.4",
 		"@xenova/transformers": "^2.7.0",
 		"clipboardy": "^4.0.0",
 		"ts-proto": "^1.165.0"
