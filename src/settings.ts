@@ -115,11 +115,20 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             .setName('Current API Key')
             .addText(text => text
                 .setPlaceholder(this.plugin.settings.obfuscatedKey).setDisabled(true))
+
+        const apiKeyDesc = new DocumentFragment()
+        apiKeyDesc.textContent = "Hugging face API key. See the "
+        apiKeyDesc.createEl("a", { text: "hugging face docs", href: "https://huggingface.co/docs/api-inference/quicktour#get-your-api-token" })
+        apiKeyDesc.createSpan({ text: " on how to generate it." })
         const apiKeyInput = new Setting(containerEl)
             .setName('Set API Key')
-            .setDesc('Hugging face API key. See https://huggingface.co/docs/api-inference/quicktour#get-your-api-token.')
-            .addText(text => text
-                .onChange(async value => {
+            .setDesc(apiKeyDesc)
+            .addText(text => text.inputEl.setAttr("type", "password"))
+        apiKeyInput.addButton(btn =>
+            btn.setButtonText("Submit")
+                .setCta()
+                .onClick(async evt => {
+                    const value = (apiKeyInput.components[0] as TextComponent).getValue()
                     let key
                     if (safeStorage.isEncryptionAvailable()) {
                         key = safeStorage.encryptString(value)
@@ -132,7 +141,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     this.plugin.settings.hfApiKey = key;
                     (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
                     await this.plugin.saveSettings()
-                }).inputEl.setAttr("type", "password"))
+                }))
 
 
         const ApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
