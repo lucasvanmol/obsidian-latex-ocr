@@ -198,14 +198,14 @@ export default class LatexOCR extends Plugin {
 			console.error(err)
 		}
 
-		// Find generating message again, starting search from original line
-		// (it may have moved up or down)
+		// Find generating message again.
+		// Starts search from original line, then downwards to the end of the document,
+		// Then upwards to the start of the document.
 		const firstLine = 0;
 		const lastLine = editor.lineCount() - 1;
 		let currLine = from.line;
-		let currOffset = 0; // 0, +1, -1, +2, -2
 
-		while (currLine >= firstLine && currLine <= lastLine) {
+		while (currLine <= lastLine) {
 			const text = editor.getLine(currLine);
 			const from = text.indexOf(fullMessage)
 			if (from !== -1) {
@@ -215,12 +215,21 @@ export default class LatexOCR extends Plugin {
 				}
 				return
 			}
-			currLine += currOffset;
-			if (currOffset <= 0) {
-				currOffset = (-currOffset + 1)
-			} else {
-				currOffset = -currOffset
+			currLine += 1;
+		}
+
+		currLine = from.line - 1;
+		while (currLine >= firstLine) {
+			const text = editor.getLine(currLine);
+			const from = text.indexOf(fullMessage)
+			if (from !== -1) {
+				editor.replaceRange(latex, { line: currLine, ch: from }, { line: currLine, ch: from + fullMessage.length })
+				if (latex !== "") {
+					new Notice(`🪄 Latex pasted to note`)
+				}
+				return
 			}
+			currLine -= 1;
 		}
 
 		// If the message isn't found, abort
