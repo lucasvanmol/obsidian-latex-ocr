@@ -39,11 +39,32 @@ export default class ApiModel implements Model {
         const data = fs.readFileSync(filepath);
 
         try {
-            const response = await imageToText({
-                accessToken: this.apiKey,
-                model: "Norm/nougat-latex-base",
-                data: data,
-            })
+
+            let response;
+            try {
+                response = await imageToText({
+                    accessToken: this.apiKey,
+                    model: "Norm/nougat-latex-base",
+                    data: data,
+                }, {
+                    retry_on_error: false,
+                });
+            } catch (error) {
+                console.error(error)
+
+                if (`${error}`.includes("is currently loading")) {
+                    notice.setMessage(`⚙️ Generating Latex for ${file.base}... (model is being provisioned)`)
+                }
+
+                response = await imageToText({
+                    accessToken: this.apiKey,
+                    model: "Norm/nougat-latex-base",
+                    data: data,
+                }, {
+                    retry_on_error: false,
+                    wait_for_model: true,
+                })
+            }
 
             console.log(`latex_ocr: ${JSON.stringify(response)}`)
             setTimeout(() => notice.hide(), 1000)
