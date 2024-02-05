@@ -45,7 +45,7 @@ export default class ApiModel implements Model {
                 data: data,
             })
 
-            console.log(`latex_ocr_api: ${response}`)
+            console.log(`latex_ocr: ${JSON.stringify(response)}`)
             setTimeout(() => notice.hide(), 1000)
 
             const latex = response.generated_text
@@ -53,7 +53,7 @@ export default class ApiModel implements Model {
                 const d = this.settings.delimiters
                 return (`${d}${latex}${d}`)
             } else {
-                throw new Error(`Malformed response ${response}`)
+                throw new Error(`Malformed response ${JSON.stringify(response)}`)
             }
         } catch (error) {
             setTimeout(() => notice.hide(), 1000)
@@ -61,7 +61,7 @@ export default class ApiModel implements Model {
             // check 429: rate limited
             // check 400/401: unauthoorized api key
             throw error
-        } 
+        }
     }
 
 
@@ -76,7 +76,7 @@ export default class ApiModel implements Model {
                 headers: { Authorization: `Bearer ${this.apiKey}` },
                 method: "GET",
             })
-                
+
             return { status: Status.Ready, msg: "API key is working" }
         } catch (response) {
             if (response.status === 400 || response.status === 401) {
@@ -84,6 +84,7 @@ export default class ApiModel implements Model {
             } else {
                 console.error(response)
                 return { status: Status.Unreachable, msg: `Got ${response.status}: ${response}` }
-        }}
+            }
+        }
     }
 }

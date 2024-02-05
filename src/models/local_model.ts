@@ -38,7 +38,9 @@ export class LocalModel implements Model {
 
     unload() {
         // shutdown server
-        this.serverProcess.kill()
+        if (this.serverProcess) {
+            this.serverProcess.kill()
+        }
     }
 
     async imgfileToLatex(filepath: string): Promise<string> {

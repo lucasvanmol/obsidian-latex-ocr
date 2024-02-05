@@ -118,7 +118,10 @@ export default class LatexOCR extends Plugin {
 			id: 'paste-latex-from-clipboard',
 			name: 'Paste Latex from clipboard image',
 			editorCallback: (editor, ctx) => {
-				this.clipboardToText(editor)
+				this.clipboardToText(editor).catch((err) => {
+					new Notice(err.message)
+					console.error(err.name, err.message)
+				})
 			}
 		})
 
@@ -145,92 +148,82 @@ export default class LatexOCR extends Plugin {
 	// Get a clipboard file, save it to disk temporarily,
 	// call the LatexOCR client.
 	async clipboardToText(editor: Editor) {
-		try {
-			const file = await navigator.clipboard.read();
-			if (file.length === 0) {
-				throw new Error("Couldn't find image in clipboard")
-			}
-			let filetype = null;
-			for (const ext of IMG_EXTS) {
-				if (file[0].types.includes(`image/${ext}`)) {
-					console.log(`latex_ocr: found image in clipboard with mimetype image/${ext}`)
-					filetype = ext;
-					break
-				}
-			}
-
-			if (filetype === null) {
-				throw new Error("Couldn't find image in clipboard")
-			}
-
-			const from = editor.getCursor("from")
-			const waitMessage = `\\LaTeX \\text{ is being generated... } \\vphantom{${from.line}}`
-			const fullMessage = `${this.settings.delimiters}${waitMessage}${this.settings.delimiters}`
-
-			try {
-				console.log(`latex_ocr: recieved paste command at line ${from.line}`)
-
-				// Abort if model isn't ready
-				const status = await this.model.status()
-				if (status.status !== Status.Ready) {
-					throw new Error(status.msg)
-				}
-
-				// Write generating message
-				editor.replaceSelection(fullMessage)
-
-				// Save image to file
-				const blob = await file[0].getType(`image/${filetype}`);
-				const buffer = Buffer.from(await blob.arrayBuffer());
-				const imgpath = path.join(this.vaultPath, this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
-				fs.writeFileSync(imgpath, buffer)
-
-				let latex: string;
-				try {
-					// Get latex
-					latex = await this.model.imgfileToLatex(imgpath)
-				} catch (err) {
-					// If err, return empty string so that we erase `fullMessage`
-					latex = ""
-					new Notice(`⚠️ ${err} `, 5000)
-					console.error(err)
-				}
-
-				// Find generating message again, starting search from original line
-				// (it may have moved up or down)
-				const firstLine = 0;
-				const lastLine = editor.lineCount() - 1;
-				let currLine = from.line;
-				let currOffset = 0; // 0, +1, -1, +2, -2
-
-				while (currLine >= firstLine && currLine <= lastLine) {
-					const text = editor.getLine(currLine);
-					const from = text.indexOf(fullMessage)
-					if (from !== -1) {
-						editor.replaceRange(latex, { line: currLine, ch: from }, { line: currLine, ch: from + fullMessage.length })
-						if (latex !== "") {
-							new Notice(`🪄 Latex pasted to note`)
-						}
-						return
-					}
-					currLine += currOffset;
-					if (currOffset <= 0) {
-						currOffset = (-currOffset + 1)
-					} else {
-						currOffset = -currOffset
-					}
-				}
-
-				// If the message isn't found, abort
-				throw new Error("Couldn't find paste target")
-			} catch (err) {
-				new Notice(`⚠️ ${err} `, 5000)
-				console.error(err)
-			}
-			return
-		} catch (err) {
-			new Notice(err.message)
-			console.error(err.name, err.message)
+		// Get clipboard file
+		const file = await navigator.clipboard.read();
+		if (file.length === 0) {
+			throw new Error("Couldn't find image in clipboard")
 		}
+
+		let filetype = null;
+		for (const ext of IMG_EXTS) {
+			if (file[0].types.includes(`image/${ext}`)) {
+				console.log(`latex_ocr: found image in clipboard with mimetype image/${ext}`)
+				filetype = ext;
+				break
+			}
+		}
+
+		if (filetype === null) {
+			throw new Error("Couldn't find image in clipboard")
+		}
+
+		// Abort if model isn't ready
+		const status = await this.model.status()
+		if (status.status !== Status.Ready) {
+			throw new Error(status.msg)
+		}
+
+		// Write generating message
+		const from = editor.getCursor("from")
+		console.log(`latex_ocr: recieved paste command at line ${from.line}`)
+		const waitMessage = `\\LaTeX \\text{ is being generated... } \\vphantom{${from.line}}`
+		const fullMessage = `${this.settings.delimiters}${waitMessage}${this.settings.delimiters}`
+
+		editor.replaceSelection(fullMessage)
+
+		// Save image to file
+		const blob = await file[0].getType(`image/${filetype}`);
+		const buffer = Buffer.from(await blob.arrayBuffer());
+		const imgpath = path.join(this.vaultPath, this.pluginPath, `/.clipboard_images/pasted_image.${filetype}`);
+		fs.writeFileSync(imgpath, buffer)
+
+		let latex: string;
+		try {
+			// Get latex
+			latex = await this.model.imgfileToLatex(imgpath)
+		} catch (err) {
+			// If err, return empty string so that we erase `fullMessage`
+			latex = ""
+			new Notice(`⚠️ ${err} `, 5000)
+			console.error(err)
+		}
+
+		// Find generating message again, starting search from original line
+		// (it may have moved up or down)
+		const firstLine = 0;
+		const lastLine = editor.lineCount() - 1;
+		let currLine = from.line;
+		let currOffset = 0; // 0, +1, -1, +2, -2
+
+		while (currLine >= firstLine && currLine <= lastLine) {
+			const text = editor.getLine(currLine);
+			const from = text.indexOf(fullMessage)
+			if (from !== -1) {
+				editor.replaceRange(latex, { line: currLine, ch: from }, { line: currLine, ch: from + fullMessage.length })
+				if (latex !== "") {
+					new Notice(`🪄 Latex pasted to note`)
+				}
+				return
+			}
+			currLine += currOffset;
+			if (currOffset <= 0) {
+				currOffset = (-currOffset + 1)
+			} else {
+				currOffset = -currOffset
+			}
+		}
+
+		// If the message isn't found, abort
+		throw new Error("Couldn't find paste target")
 	}
 }

@@ -60,7 +60,9 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.useLocalModel)
                 .onChange(async value => {
-                    this.plugin.model.unload()
+                    if (this.plugin.model) {
+                        this.plugin.model.unload()
+                    }
 
                     if (value) {
                         this.plugin.model = new LocalModel(this.plugin.settings)
@@ -184,7 +186,9 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .setButtonText("(Re)start server")
                 .onClick(async (evt) => {
                     new Notice("⚙️ Starting server...", 5000)
-                    this.plugin.model.unload()
+                    if (this.plugin.model) {
+                        this.plugin.model.unload()
+                    }
                 }))
 
 
