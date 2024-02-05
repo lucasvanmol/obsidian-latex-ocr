@@ -14,17 +14,6 @@ Generate Latex equations from images and screenshots inside your vault.
 - Transform images in your vault to LaTeX equations by choosing a new "Generate Latex" option in their context menu.
 - Use either the HuggingFace [inference API](#using-inference-api) or [run locally](#run-locally)
 
-## Installation
-
-### Manual Installation
-
-- Create a new folder for the plugin at `VaultFolder/.obsidian/plugins/latex-ocr/`
-- Navigate to this project's "Releases" tab
-- Copy over `main.js`, `styles.css` and `manifest.json`, to your vault `VaultFolder/.obsidian/plugins/latex-ocr/`.
-
-### BRAT
-
-Alternatively, you can also use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to do this automatically by providing the link to this repository. If enabled you can download future beta versions easily.
 
 ## Using Inference API
 
@@ -79,6 +68,10 @@ python -m latex_ocr_server info --gpu-available
 ```
 
 If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
+
+## Beta testing with BRAT
+
+You can use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to keep up to date with beta updates for this plugin. You'll get more frequent updates & improvements, but things may be slightly more likely to break.
 
 ## Attribution
 
