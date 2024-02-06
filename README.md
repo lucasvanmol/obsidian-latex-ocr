@@ -5,8 +5,7 @@
 
 Generate Latex equations from images and screenshots inside your vault.
 
-![demo](images/demo.gif)
-
+<img src="/images/demo.gif" width="50%"/>
 
 ## Features
 
