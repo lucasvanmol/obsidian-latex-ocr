@@ -53,7 +53,7 @@ export default class ApiModel implements Model {
                 console.error(error)
 
                 if (`${error}`.includes("is currently loading")) {
-                    notice.setMessage(`⚙️ Generating Latex for ${file.base}... (model is being provisioned)`)
+                    notice.setMessage(`⚙️ Generating Latex for ${file.base}... model is being provisioned...`)
                 }
 
                 response = await imageToText({

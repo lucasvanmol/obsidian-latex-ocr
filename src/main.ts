@@ -119,7 +119,7 @@ export default class LatexOCR extends Plugin {
 			name: 'Paste Latex from clipboard image',
 			editorCallback: (editor, ctx) => {
 				this.clipboardToText(editor).catch((err) => {
-					new Notice(err.message)
+					new Notice(`❌ ${err.message}`)
 					console.error(err.name, err.message)
 				})
 			}
