@@ -1,7 +1,7 @@
 # Latex OCR for Obsidian
 ![GitHub release (with filter)](https://img.shields.io/github/v/release/lucasvanmol/obsidian-latex-ocr) 
+![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&color=%23483699&label=downloads&query=%24%5B%27latex-ocr%27%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)
 <a href="https://www.buymeacoffee.com/lucasvanmol" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="20" width="100"></a>
-
 
 Generate Latex equations from images and screenshots inside your vault.
 
@@ -30,7 +30,7 @@ By default, this plugin uses the HuggingFace inference API. Here's how you get y
 Alternatively, you can run the model locally. This requires installing an accompanying [python package](https://github.com/lucasvanmol/latex-ocr-server). Install it using `pip` (or, preferably `pipx`):
 
 ```
-pip install https://github.com/lucasvanmol/latex-ocr-server/releases/download/0.1.0/latex_ocr_server-0.1.0-py3-none-any.whl
+pip install latex-ocr-server
 ```
 
 You can check if it is installed by running
