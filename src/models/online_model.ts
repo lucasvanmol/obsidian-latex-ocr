@@ -48,6 +48,12 @@ export default class ApiModel implements Model {
                     data: data,
                 }, {
                     retry_on_error: false,
+                    fetch: (input, init) => {
+                        // Add a parameter to the request to increase the token length
+                        const image_data = (init?.body as Buffer).toString('base64');
+                        const payload = { "inputs": image_data, "parameters": { "max_new_tokens": 800 } };
+                        return fetch(input, { ...init, body: JSON.stringify(payload) })
+                    }
                 });
             } catch (error) {
                 console.error(error)
