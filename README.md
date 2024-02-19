@@ -7,8 +7,6 @@ Generate Latex equations from images and screenshots inside your vault.
 
 <img src="/images/demo.gif" width="50%"/>
 
-⚠️There's currently an issue with the HuggingFace API. If possible, I'd recommend switching to the local model instead.
-
 ## Features
 
 - Paste LaTeX equations directly into your notes using an image from your clipboard with a custom command (bind it to a hotkey like `Ctrl+Alt+V` if you use it often!).
