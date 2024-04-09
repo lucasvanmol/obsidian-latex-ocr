@@ -38,6 +38,13 @@ export default class ApiModel implements Model {
 
         const data = fs.readFileSync(filepath);
 
+        // Add a parameter to the request to increase the token length, see https://github.com/NormXU/nougat-latex-ocr/issues/2
+        const fetch_max_tokens = (input: RequestInfo | URL, init: RequestInit | undefined) => {
+            const image_data = (init?.body as Buffer).toString('base64');
+            const payload = { "inputs": image_data, "parameters": { "max_new_tokens": 800 } };
+            return fetch(input, { ...init, body: JSON.stringify(payload) })
+        }
+
         try {
 
             let response;
@@ -48,12 +55,7 @@ export default class ApiModel implements Model {
                     data: data,
                 }, {
                     retry_on_error: false,
-                    fetch: (input, init) => {
-                        // Add a parameter to the request to increase the token length
-                        const image_data = (init?.body as Buffer).toString('base64');
-                        const payload = { "inputs": image_data, "parameters": { "max_new_tokens": 800 } };
-                        return fetch(input, { ...init, body: JSON.stringify(payload) })
-                    }
+                    fetch: fetch_max_tokens
                 });
             } catch (error) {
                 console.error(error)
@@ -69,6 +71,7 @@ export default class ApiModel implements Model {
                 }, {
                     retry_on_error: false,
                     wait_for_model: true,
+                    fetch: fetch_max_tokens
                 })
             }
 
