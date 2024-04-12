@@ -159,7 +159,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .setIcon("folder")
                 .setTooltip("Browse")
                 .onClick(async () => {
-                    let file = await picker("Open Python path", ["openFile"]) as string;
+                    const file = await picker("Open Python path", ["openFile"]) as string;
                     (pythonPath.components[1] as TextComponent).setValue(file)
                 }))
             .addText(text => text
@@ -222,7 +222,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .setIcon("folder")
                 .setTooltip("Browse")
                 .onClick(async () => {
-                    let folder = await picker("Open cache directory", ["openDirectory"]) as string;
+                    const folder = await picker("Open cache directory", ["openDirectory"]) as string;
                     (cacheDir.components[1] as TextComponent).setValue(folder)
                 }))
             .addText(text => text
@@ -235,7 +235,6 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     }
                 }))
 
-        // eslint-disable-next-line prefer-const
         const LocalSettings: HTMLElement[] = [pythonPath.settingEl, serverStatus.settingEl, port.settingEl, startOnLaunch.settingEl, cacheDir.settingEl]
 
         if (this.plugin.settings.useLocalModel) {

@@ -29,7 +29,7 @@ export class LatexOCRModal extends Modal {
                 .setIcon("folder")
                 .setTooltip("Browse")
                 .onClick(async () => {
-                    let file = await picker("Open image", ["openFile"]) as string;
+                    const file = await picker("Open image", ["openFile"]) as string;
                     this.imagePath = file
                     const tfile = this.app.vault.getAbstractFileByPath(path.relative(this.plugin.vaultPath, file));
                     img.setAttr("src", this.app.vault.getResourcePath(tfile as TFile))

@@ -4,7 +4,7 @@ import Model, { Status } from 'models/model';
 import * as path from 'path'
 import { LatexOCRClient } from 'protos/latex_ocr';
 import * as grpc from '@grpc/grpc-js';
-import { Notice, PluginManifest } from 'obsidian';
+import { Notice } from 'obsidian';
 
 const IMG_EXTS = ["png", "jpg", "jpeg", "bmp", "dib", "eps", "gif", "ppm", "pbm", "pgm", "pnm", "webp"]
 const SCRIPT_VERSION = "0.1.0"
