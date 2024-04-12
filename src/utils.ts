@@ -1,5 +1,6 @@
 declare global {
     interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         electron: any;
     }
 }
@@ -8,8 +9,7 @@ export async function picker(
     message: string,
     properties: string[]
 ) {
-    let dirPath: string[]
-    dirPath = window.electron.remote.dialog.showOpenDialogSync({
+    const dirPath: string[] = window.electron.remote.dialog.showOpenDialogSync({
         title: message,
         properties
     });
