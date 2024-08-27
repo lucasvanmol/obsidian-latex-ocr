@@ -33,7 +33,7 @@ export class StatusBar {
     // ❌: LatexOCR isn't reachable
     async updateStatusBar(): Promise<boolean> {
         const status = await this.plugin.model.status()
-        console.log(`latex_ocr: sent status check to ${this.plugin.model.constructor.name}, got ${JSON.stringify(status)}`)
+        this.plugin.debug(`latex_ocr: sent status check to ${this.plugin.model.constructor.name}, got ${JSON.stringify(status)}`)
 
         switch (status.status) {
             case Status.Ready:
@@ -57,7 +57,7 @@ export class StatusBar {
                 break;
 
             default:
-                console.error(status)
+                this.plugin.debug(status, true)
                 break;
         }
         return false

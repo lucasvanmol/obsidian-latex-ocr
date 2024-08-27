@@ -56,7 +56,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Use local model")
             .setDesc("Use local model with python. \
-			See the project's README for installation instructions")
+			See the project's README for installation instructions.")
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.useLocalModel)
                 .onChange(async value => {
@@ -66,11 +66,13 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
                     if (value) {
                         this.plugin.model = new LocalModel(this.plugin.settings)
+                        configuration_text.setText(LOCAL_CONF_TEXT)
 
                         ApiSettings.forEach(e => e.hide())
                         LocalSettings.forEach(e => e.show())
                     } else {
                         this.plugin.model = new ApiModel(this.plugin.settings)
+                        configuration_text.setText(API_CONF_TEXT)
 
                         ApiSettings.forEach(e => e.show())
                         LocalSettings.forEach(e => e.hide())
@@ -109,7 +111,23 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             })
         }
 
-        containerEl.createEl("h5", { text: "Configuration" })
+        new Setting(containerEl)
+            .setName("Debug mode")
+            .setDesc("Enables debug logging in the console.")
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.debug).onChange(
+                    async (value) => {
+                        this.plugin.settings.debug = value
+                        await this.plugin.saveSettings()
+                    }));
+
+
+        const API_CONF_TEXT = "HuggingFace API Configuration"
+        const LOCAL_CONF_TEXT = "Local Python Model Configuration"
+        const configuration_text = containerEl.createEl("h5", { text: API_CONF_TEXT })
+        if (this.plugin.settings.useLocalModel) {
+            configuration_text.setText(LOCAL_CONF_TEXT)
+        }
 
         ///// API MODEL SETTINGS /////
 

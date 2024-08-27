@@ -14,7 +14,7 @@ The reason for this is that loading the model takes some time. This setup allows
 - Install the required python module from [latex-ocr-server](https://github.com/lucasvanmol/latex-ocr-server)
 - Run `npm run dev` to compile the plugin from `main.ts` to `main.js`.
 - Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of the plugin.
+- Reload Obsidian to load the new version of the plugin (or use the Hot Reload plugin!)
 - Enable plugin in settings window.
 - For updates to the Obsidian API run `npm update` in the command line under the repo folder.
 

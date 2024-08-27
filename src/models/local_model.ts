@@ -57,7 +57,7 @@ export class LocalModel implements Model {
                 if (err) {
                     reject(`Error getting response from latex_ocr_server: ${err}`)
                 } else {
-                    console.log(`latex_ocr_server: ${latex?.latex}`);
+                    this.plugin.debug(`latex_ocr_server: ${latex?.latex}`);
                     if (latex) {
                         const result = `${d}${latex.latex}${d}`;
                         resolve(result);
@@ -106,10 +106,14 @@ export class LocalModel implements Model {
 
                 pythonProcess.stdout.on('data', data => {
                     const [prog, version] = data.toString().split(" ")
-                    console.log(`${prog} version ${version} (required version: ${SCRIPT_VERSION})`)
+                    if (this.plugin_settings.debug) {
+                        console.log(`${prog} version ${version} (required version: ${SCRIPT_VERSION})`)
+                    }
                 })
                 pythonProcess.stderr.on('data', data => {
-                    console.error(data.toString())
+                    if (this.plugin_settings.debug) {
+                        console.error(data.toString())
+                    }
                 })
 
                 pythonProcess.on('close', code => {
@@ -155,13 +159,17 @@ export class LocalModel implements Model {
                 if (data.toString().toLowerCase().includes("downloading")) {
                     this.last_download_update = data.toString()
                 }
-                console.log(`latex_ocr_server: ${data.toString()}`)
+                if (this.plugin_settings.debug) {
+                    console.log(`latex_ocr_server: ${data.toString()}`)
+                }
             })
             pythonProcess.stderr.on('data', data => {
                 if (data.toString().toLowerCase().includes("downloading")) {
                     this.last_download_update = data.toString()
                 }
-                console.error(`latex_ocr_server: ${data.toString()}`)
+                if (this.plugin_settings.debug) {
+                    console.error(`latex_ocr_server: ${data.toString()}`)
+                }
             })
 
             pythonProcess.on('close', code => {
@@ -181,6 +189,7 @@ export class LocalModel implements Model {
                 new Notice(`❌ ${err}`, 10000)
             }).catch((pythonErr) => {
                 new Notice(`❌ ${pythonErr}`, 10000)
+                console.error(pythonErr)
             })
         }
     }
