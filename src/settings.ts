@@ -179,6 +179,8 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .onClick(async () => {
                     const file = await picker("Open Python path", ["openFile"]) as string;
                     (pythonPath.components[1] as TextComponent).setValue(file)
+					this.plugin.settings.pythonPath = normalizePath(file);
+                    await this.plugin.saveSettings();
                 }))
             .addText(text => text
                 .setPlaceholder('path/to/python.exe')
