@@ -18,10 +18,16 @@ export default class ApiModel implements Model {
 
     reloadSettings(settings: LatexOCRSettings) {
         this.settings = settings
-        if (safeStorage.isEncryptionAvailable()) {
-            this.apiKey = safeStorage.decryptString(Buffer.from(settings.hfApiKey as ArrayBuffer))
-        } else {
-            this.apiKey = settings.hfApiKey as string
+        try {
+            if (safeStorage.isEncryptionAvailable()) {
+                this.apiKey = safeStorage.decryptString(Buffer.from(settings.hfApiKey as ArrayBuffer))
+            } else {
+                this.apiKey = settings.hfApiKey as string
+            }
+        } catch (error) {
+            new Notice(`❌ There was an error loading your API key`)
+            console.error('Error loading API key:', error);
+            this.apiKey = ""
         }
     }
 
