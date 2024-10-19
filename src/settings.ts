@@ -244,6 +244,8 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .onClick(async () => {
                     const folder = await picker("Open cache directory", ["openDirectory"]) as string;
                     (cacheDir.components[1] as TextComponent).setValue(folder)
+					this.plugin.settings.cacheDirPath = normalizePath(folder)
+                    await this.plugin.saveSettings();
                 }))
             .addText(text => text
                 .setValue(this.plugin.settings.cacheDirPath)
