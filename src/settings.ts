@@ -179,6 +179,8 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .onClick(async () => {
                     const file = await picker("Open Python path", ["openFile"]) as string;
                     (pythonPath.components[1] as TextComponent).setValue(file)
+					this.plugin.settings.pythonPath = normalizePath(file);
+                    await this.plugin.saveSettings();
                 }))
             .addText(text => text
                 .setPlaceholder('path/to/python.exe')
@@ -242,6 +244,8 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .onClick(async () => {
                     const folder = await picker("Open cache directory", ["openDirectory"]) as string;
                     (cacheDir.components[1] as TextComponent).setValue(folder)
+					this.plugin.settings.cacheDirPath = normalizePath(folder)
+                    await this.plugin.saveSettings();
                 }))
             .addText(text => text
                 .setValue(this.plugin.settings.cacheDirPath)
