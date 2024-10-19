@@ -52,12 +52,15 @@ export class LocalModel implements Model {
             }
             const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
             const d = this.plugin_settings.delimiters;
+            const debug = this.plugin_settings.debug
 
             this.client.generateLatex({ imagePath: filepath }, async function (err, latex) {
                 if (err) {
                     reject(`Error getting response from latex_ocr_server: ${err}`)
                 } else {
-                    this.plugin.debug(`latex_ocr_server: ${latex?.latex}`);
+                    if (debug) {
+                        console.log(`latex_ocr_server: ${latex?.latex}`);
+                    }
                     if (latex) {
                         const result = `${d}${latex.latex}${d}`;
                         resolve(result);
@@ -107,7 +110,7 @@ export class LocalModel implements Model {
                 pythonProcess.stdout.on('data', data => {
                     const [prog, version] = data.toString().split(" ")
                     if (this.plugin_settings.debug) {
-                        console.log(`${prog} version ${version} (required version: ${SCRIPT_VERSION})`)
+                        console.log(`${prog} version ${version} (min version: ${SCRIPT_VERSION})`)
                     }
                 })
                 pythonProcess.stderr.on('data', data => {
@@ -145,6 +148,10 @@ export class LocalModel implements Model {
                 "-d",
                 "--port", port,
                 "--cache_dir", this.plugin_settings.cacheDirPath]
+
+            if (this.plugin_settings.debug) {
+                console.log(`Starting server with the following command: \n${this.plugin_settings.pythonPath, args}`)
+            }
             const pythonProcess = spawn(this.plugin_settings.pythonPath, args)
 
             pythonProcess.on('spawn', () => {
