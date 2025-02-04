@@ -2,9 +2,10 @@ import { Status } from "models/model";
 import LatexOCR from "main";
 import { LocalModel } from "models/local_model";
 import ApiModel from "models/online_model";
-import { PluginSettingTab, App, Setting, Notice, TextComponent, normalizePath } from "obsidian";
+import { PluginSettingTab, App, Setting, Notice, TextComponent } from "obsidian";
 import safeStorage from "safeStorage";
 import { picker } from "utils";
+import { normalize } from "path";
 
 const obfuscateApiKey = (apiKey = ''): string =>
     apiKey.length > 0 ? apiKey.replace(/^(.{3})(.*)(.{4})$/, '$1****$3') : ''
@@ -179,14 +180,14 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .onClick(async () => {
                     const file = await picker("Open Python path", ["openFile"]) as string;
                     (pythonPath.components[1] as TextComponent).setValue(file)
-					this.plugin.settings.pythonPath = normalizePath(file);
+                    this.plugin.settings.pythonPath = normalize(file);
                     await this.plugin.saveSettings();
                 }))
             .addText(text => text
                 .setPlaceholder('path/to/python.exe')
                 .setValue(this.plugin.settings.pythonPath)
                 .onChange(async (value) => {
-                    this.plugin.settings.pythonPath = normalizePath(value);
+                    this.plugin.settings.pythonPath = normalize(value);
                     await this.plugin.saveSettings();
                 }))
 
@@ -244,13 +245,13 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 .onClick(async () => {
                     const folder = await picker("Open cache directory", ["openDirectory"]) as string;
                     (cacheDir.components[1] as TextComponent).setValue(folder)
-					this.plugin.settings.cacheDirPath = normalizePath(folder)
+                    this.plugin.settings.cacheDirPath = normalize(folder)
                     await this.plugin.saveSettings();
                 }))
             .addText(text => text
                 .setValue(this.plugin.settings.cacheDirPath)
                 .onChange(async (value) => {
-                    const path = normalizePath(value)
+                    const path = normalize(value)
                     if (path !== "") {
                         this.plugin.settings.cacheDirPath = path
                         await this.plugin.saveSettings();

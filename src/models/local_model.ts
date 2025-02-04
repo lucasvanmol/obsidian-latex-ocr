@@ -123,13 +123,13 @@ export class LocalModel implements Model {
                     if (code === 0) {
                         resolve()
                     } else {
-                        reject(new Error(`latex_ocr_server isnt't installed for ${this.plugin_settings.pythonPath}`))
+                        reject(new Error(`latex_ocr_server isn't installed for ${this.plugin_settings.pythonPath}`))
                     }
                 })
 
                 pythonProcess.on('error', (err) => {
                     if (err.message.includes("ENOENT")) {
-                        reject(new Error(`Couldn't locate python install "${this.plugin_settings.pythonPath}", please change it in the plugin settings`))
+                        reject(new Error(`Couldn't locate python install, please change it in the plugin settings: ${this.plugin_settings.pythonPath}`))
                     } else {
                         reject(new Error(`${err}`))
                     }
