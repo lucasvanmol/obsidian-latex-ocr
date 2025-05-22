@@ -3,6 +3,13 @@
 ![Obsidian Downloads](https://img.shields.io/badge/dynamic/json?logo=obsidian&color=%23483699&label=downloads&query=%24%5B%27latex-ocr%27%5D.downloads&url=https%3A%2F%2Fraw.githubusercontent.com%2Fobsidianmd%2Fobsidian-releases%2Fmaster%2Fcommunity-plugin-stats.json)
 <a href="https://www.buymeacoffee.com/lucasvanmol" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="20" width="100"></a>
 
+> ⚠️ **Inference API issues** ⚠️
+> 
+> The HuggingFace Inference API is not working as Hugging Face is currently **not supporting image-to-text models**. Check the [issue here](https://github.com/lucasvanmol/obsidian-latex-ocr/issues/37) for updates.
+> Running locally is still supported & working.
+
+
+
 Generate Latex equations from images and screenshots inside your vault.
 
 <img src="/images/demo.gif" width="50%"/>
