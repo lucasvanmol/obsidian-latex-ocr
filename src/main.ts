@@ -146,6 +146,19 @@ export default class LatexOCR extends Plugin {
 			}
 		})
 
+		// Add (Re)start server command to command palette
+		this.addCommand({
+			id: 'restart-latexocr-server',
+			name: '(Re)start LatexOCR Server',
+			callback: async () => {
+				new Notice("⚙️ Starting server...", 5000);
+				if (this.model) {
+					this.model.unload();
+					this.model.load();
+				}
+			}
+		});
+
 		// Status bar, will automatically start based on settings
 		this.statusBar = new StatusBar(this)
 	}
