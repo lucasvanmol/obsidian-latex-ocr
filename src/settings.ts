@@ -209,6 +209,8 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     new Notice("⚙️ Starting server...", 5000)
                     if (this.plugin.model) {
                         this.plugin.model.unload()
+                        this.plugin.model.load()
+                        this.plugin.model.start()
                     }
                 }))
 

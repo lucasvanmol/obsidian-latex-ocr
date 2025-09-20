@@ -36,6 +36,8 @@ export default class ApiModel implements Model {
         console.log("latex_ocr: API model loaded.")
     }
 
+    start() { }
+
     unload() { }
 
     async imgfileToLatex(filepath: string): Promise<string> {

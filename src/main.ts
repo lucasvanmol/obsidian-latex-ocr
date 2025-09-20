@@ -9,7 +9,8 @@ import clipboard from 'clipboardy';
 import * as path from 'path';
 import * as fs from 'fs';
 import { LocalModel } from "models/local_model"
-import Model, { Status, StatusBar } from 'models/model';
+import Model, { Status } from 'models/model';
+import { StatusBar } from "status_bar";
 import { LatexOCRModal } from 'modal';
 import ApiModel from 'models/online_model';
 import LatexOCRSettingsTab from 'settings';
@@ -91,6 +92,10 @@ export default class LatexOCR extends Plugin {
 			this.model = new ApiModel(this.settings)
 		}
 		this.model.load()
+		if (this.settings.startServerOnLoad) {
+			this.model.start()
+		}
+
 
 		// Folder where temporary pasted files are stored
 		try {
@@ -145,6 +150,20 @@ export default class LatexOCR extends Plugin {
 				})
 			}
 		})
+
+		// Add (Re)start server command to command palette
+		this.addCommand({
+			id: 'restart-latexocr-server',
+			name: '(Re)start LatexOCR Server',
+			callback: async () => {
+				new Notice("⚙️ Starting server...", 5000);
+				if (this.model) {
+					this.model.unload();
+					this.model.load();
+					this.model.start();
+				}
+			}
+		});
 
 		// Status bar, will automatically start based on settings
 		this.statusBar = new StatusBar(this)
