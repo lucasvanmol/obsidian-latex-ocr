@@ -29,11 +29,6 @@ export class LocalModel implements Model {
         // RPC Client
         console.log(`latex_ocr: initializing RPC client at port ${this.plugin_settings.port}`)
         this.client = new LatexOCRClient(`localhost:${this.plugin_settings.port}`, grpc.credentials.createInsecure())
-
-        // LatexOCR Python Server
-        if (this.plugin_settings.startServerOnLoad) {
-            this.startServer()
-        }
     }
 
     unload() {
@@ -187,7 +182,8 @@ export class LocalModel implements Model {
     }
 
     // Start the server process. If it fails, try to see if python is working.
-    async startServer() {
+    async start() {
+        console.log("latex_ocr_server: starting local server")
         try {
             this.serverProcess = await this.spawnLatexOcrServer(this.plugin_settings.port)
         } catch (err) {
