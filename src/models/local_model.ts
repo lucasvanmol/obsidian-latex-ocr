@@ -127,18 +127,35 @@ export class LocalModel implements Model {
                 )
 
             } else {
+                const debug = this.plugin_settings.debug;
+
                 this.client.isReady({}, (err, reply) => {
-                    if (reply?.isReady) {
-                        resolve({ status: Status.Ready, msg: "Server ready" })
-                    } else {
-                        if (this.last_download_update) {
-                            resolve({ status: Status.Downloading, msg: `The server is still downloading the model: ${this.last_download_update}` })
-                        } else {
-                            resolve({ status: Status.Loading, msg: "The server is still loading the model" })
-                        }
+                    if (err) {
+                        if (debug) console.log(`latex_ocr: isReady call failed:`, err);
+                        resolve({ status: Status.Loading, msg: "Server is not ready yet" });
+                        return;
                     }
+
+                    if (!reply?.isReady) {
+                        const msg = this.last_download_update
+                            ? `Downloading model: ${this.last_download_update}`
+                            : "Server is loading models";
+                        const status = this.last_download_update ? Status.Downloading : Status.Loading;
+                        resolve({ status, msg });
+                        return;
+                    }
+
+                    // Validate server is fully loaded by checking config
+                    this.client.getConfig({}, (configErr, config) => {
+                        if (configErr) {
+                            if (debug) console.log(`latex_ocr: getConfig failed:`, configErr);
+                            resolve({ status: Status.Loading, msg: "Server is loading models" });
+                        } else {
+                            if (debug) console.log(`latex_ocr: Server ready, config:`, config);
+                            resolve({ status: Status.Ready, msg: "Server ready" });
+                        }
+                    });
                 });
-            }
         }));
     }
 
