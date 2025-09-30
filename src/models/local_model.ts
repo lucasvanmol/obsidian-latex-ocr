@@ -40,25 +40,73 @@ export class LocalModel implements Model {
 
     async imgfileToLatex(filepath: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-
             const file = path.parse(filepath)
-            if (!IMG_EXTS.contains(file.ext.substring(1))) {
-                reject(`Unsupported image extension ${file.ext}`)
-            }
-            const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
-            const d = this.plugin_settings.delimiters;
             const debug = this.plugin_settings.debug
 
+            // Enhanced debugging
+            if (debug) {
+                console.log(`latex_ocr: Processing image at path: ${filepath}`)
+                console.log(`latex_ocr: Parsed file info:`, file)
+            }
+
+            if (!IMG_EXTS.contains(file.ext.substring(1))) {
+                reject(`Unsupported image extension ${file.ext}`)
+                return
+            }
+
+            // Check if file exists and is readable
+            const fs = require('fs')
+            try {
+                if (!fs.existsSync(filepath)) {
+                    reject(`Image file does not exist: ${filepath}`)
+                    return
+                }
+                const stats = fs.statSync(filepath)
+                if (debug) {
+                    console.log(`latex_ocr: File size: ${stats.size} bytes`)
+                }
+                if (stats.size === 0) {
+                    reject(`Image file is empty: ${filepath}`)
+                    return
+                }
+            } catch (fileErr) {
+                reject(`Cannot access image file: ${fileErr}`)
+                return
+            }
+
+            const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
+            const d = this.plugin_settings.delimiters;
+
+            if (debug) {
+                console.log(`latex_ocr: Sending gRPC request with imagePath: ${filepath}`)
+            }
+
             this.client.generateLatex({ imagePath: filepath }, async function (err, latex) {
+                if (debug) {
+                    console.log(`latex_ocr: gRPC callback received`)
+                    console.log(`latex_ocr: Error:`, err)
+                    console.log(`latex_ocr: Response:`, latex)
+                }
+
                 if (err) {
+                    if (debug) {
+                        console.error(`latex_ocr: Full gRPC error details:`, {
+                            code: err.code,
+                            details: err.details,
+                            message: err.message,
+                            metadata: err.metadata
+                        })
+                    }
                     reject(`Error getting response from latex_ocr_server: ${err}`)
                 } else {
                     if (debug) {
-                        console.log(`latex_ocr_server: ${latex?.latex}`);
+                        console.log(`latex_ocr_server response: ${latex?.latex}`);
                     }
-                    if (latex) {
+                    if (latex && latex.latex) {
                         const result = `${d}${latex.latex}${d}`;
                         resolve(result);
+                    } else {
+                        reject(`Server returned empty or invalid response: ${JSON.stringify(latex)}`)
                     }
                 }
                 setTimeout(() => notice.hide(), 1000)
