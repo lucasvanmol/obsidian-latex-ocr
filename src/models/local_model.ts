@@ -57,7 +57,6 @@ export class LocalModel implements Model {
             const file = path.parse(filepath)
             const debug = this.plugin_settings.debug
 
-            // Enhanced debugging
             if (debug) {
                 console.log(`latex_ocr: Processing image at path: ${filepath}`)
                 console.log(`latex_ocr: Parsed file info:`, file)
@@ -170,7 +169,7 @@ export class LocalModel implements Model {
                         }
                     });
                 });
-        }));
+            }));
     }
 
 

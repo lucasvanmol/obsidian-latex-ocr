@@ -65,7 +65,7 @@ The status bar at the bottom will indicate the status of the server.
 | LatexOCR 🌐 | downloading model  |
 | LatexOCR ❌ | server unreachable |
 
-If the server is online but you encouter an error getting a response from the server, ensure that the Cache dir filepath is pointing to a valid folder and that the model has successfully been saved there. 
+If the server is online but you encounter an error getting a response from the server, ensure that the `Cache dir` filepath from the plugin settings is pointing to a valid folder and that the model has successfully been saved there. 
 
 ### GPU support
 
@@ -77,9 +77,6 @@ python -m latex_ocr_server info --gpu-available
 
 If you want GPU support, follow the instructions at `https://pytorch.org/get-started/locally/` to install pytorch with CUDA. Note you may need to uninstall torch first. `torchvision` and `torchaudio` is not required. 
 
-## Beta testing with BRAT
-
-You can use [BRAT](https://github.com/TfTHacker/obsidian42-brat) to keep up to date with beta updates for this plugin. You'll get more frequent updates & improvements, but things may be slightly more likely to break.
 
 ## Attribution
 
