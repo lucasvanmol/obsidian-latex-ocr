@@ -116,7 +116,7 @@ export default class LatexOCR extends Plugin {
 									try {
 										await clipboard.write(latex)
 									} catch (err) {
-										console.debug(err);
+										console.error(err);
 										new Notice(`⚠️ Couldn't copy to clipboard because document isn't focused`)
 									}
 									new Notice(`🪄 Latex copied to clipboard`)

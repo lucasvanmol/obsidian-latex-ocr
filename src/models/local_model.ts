@@ -152,7 +152,8 @@ export class LocalModel implements Model {
                         }
                     });
                 });
-            }));
+            }
+        }));
     }
 
 
