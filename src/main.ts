@@ -16,9 +16,6 @@ import ApiModel from 'models/online_model';
 import LatexOCRSettingsTab from 'settings';
 
 export interface LatexOCRSettings {
-	/** Enables/disables debug logs */
-	debug: boolean;
-
 	/** Path to look for python installation */
 	pythonPath: string;
 
@@ -48,7 +45,6 @@ export interface LatexOCRSettings {
 }
 
 const DEFAULT_SETTINGS: LatexOCRSettings = {
-	debug: false,
 	pythonPath: 'python3',
 	cacheDirPath: '',
 	delimiters: '$$',
@@ -120,7 +116,7 @@ export default class LatexOCR extends Plugin {
 									try {
 										await clipboard.write(latex)
 									} catch (err) {
-										this.debug(err, true);
+										console.error(err);
 										new Notice(`⚠️ Couldn't copy to clipboard because document isn't focused`)
 									}
 									new Notice(`🪄 Latex copied to clipboard`)
@@ -208,7 +204,7 @@ export default class LatexOCR extends Plugin {
 		let filetype = null;
 		for (const ext of IMG_EXTS) {
 			if (file[0].types.includes(`image/${ext}`)) {
-				this.debug(`latex_ocr: found image in clipboard with mimetype image/${ext}`)
+				console.debug(`latex_ocr: found image in clipboard with mimetype image/${ext}`)
 				filetype = ext;
 				break
 			}
@@ -226,7 +222,7 @@ export default class LatexOCR extends Plugin {
 
 		// Write generating message
 		const from = editor.getCursor("from")
-		this.debug(`latex_ocr: recieved paste command at line ${from.line}`)
+		console.debug(`latex_ocr: recieved paste command at line ${from.line}`)
 		const waitMessage = `\\LaTeX \\text{ is being generated... } \\vphantom{${from.line}}`
 		const fullMessage = `${this.settings.delimiters}${waitMessage}${this.settings.delimiters}`
 
@@ -285,15 +281,5 @@ export default class LatexOCR extends Plugin {
 
 		// If the message isn't found, abort
 		throw new Error("Couldn't find paste target")
-	}
-
-	debug(message?: any, error: boolean = false) {
-		if (this.settings.debug) {
-			if (error) {
-				console.error(message)
-			} else {
-				console.log(message)
-			}
-		}
 	}
 }

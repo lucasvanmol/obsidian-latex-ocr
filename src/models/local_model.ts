@@ -43,9 +43,7 @@ export class LocalModel implements Model {
             try {
                 this.serverProcess.kill('SIGKILL');
             } catch (err) {
-                if (this.plugin_settings.debug) {
-                    console.log(`latex_ocr_server: error killing process: ${err}`)
-                }
+                console.debug(`latex_ocr_server: error killing process: ${err}`)
             }
 
             this.serverProcess = undefined as unknown as ChildProcess;
@@ -55,13 +53,9 @@ export class LocalModel implements Model {
     async imgfileToLatex(filepath: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             const file = path.parse(filepath)
-            const debug = this.plugin_settings.debug
 
-            // Enhanced debugging
-            if (debug) {
-                console.log(`latex_ocr: Processing image at path: ${filepath}`)
-                console.log(`latex_ocr: Parsed file info:`, file)
-            }
+            console.debug(`latex_ocr: Processing image at path: ${filepath}`)
+            console.debug(`latex_ocr: Parsed file info:`, file)
 
             if (!IMG_EXTS.contains(file.ext.substring(1))) {
                 reject(`Unsupported image extension ${file.ext}`)
@@ -76,9 +70,7 @@ export class LocalModel implements Model {
                     return
                 }
                 const stats = fs.statSync(filepath)
-                if (debug) {
-                    console.log(`latex_ocr: File size: ${stats.size} bytes`)
-                }
+                console.debug(`latex_ocr: File size: ${stats.size} bytes`)
                 if (stats.size === 0) {
                     reject(`Image file is empty: ${filepath}`)
                     return
@@ -91,31 +83,23 @@ export class LocalModel implements Model {
             const notice = new Notice(`⚙️ Generating Latex for ${file.base}...`, 0);
             const d = this.plugin_settings.delimiters;
 
-            if (debug) {
-                console.log(`latex_ocr: Sending gRPC request with imagePath: ${filepath}`)
-            }
+            console.debug(`latex_ocr: Sending gRPC request with imagePath: ${filepath}`)
 
             this.client.generateLatex({ imagePath: filepath }, async function (err, latex) {
-                if (debug) {
-                    console.log(`latex_ocr: gRPC callback received`)
-                    console.log(`latex_ocr: Error:`, err)
-                    console.log(`latex_ocr: Response:`, latex)
-                }
+                console.debug(`latex_ocr: gRPC callback received`)
+                console.debug(`latex_ocr: Error:`, err)
+                console.debug(`latex_ocr: Response:`, latex)
 
                 if (err) {
-                    if (debug) {
-                        console.error(`latex_ocr: Full gRPC error details:`, {
-                            code: err.code,
-                            details: err.details,
-                            message: err.message,
-                            metadata: err.metadata
-                        })
-                    }
+                    console.debug(`latex_ocr: Full gRPC error details:`, {
+                        code: err.code,
+                        details: err.details,
+                        message: err.message,
+                        metadata: err.metadata
+                    })
                     reject(`Error getting response from latex_ocr_server: ${err}`)
                 } else {
-                    if (debug) {
-                        console.log(`latex_ocr_server response: ${latex?.latex}`);
-                    }
+                    console.debug(`latex_ocr_server response: ${latex?.latex}`);
                     if (latex && latex.latex) {
                         const result = `${d}${latex.latex}${d}`;
                         resolve(result);
@@ -141,11 +125,9 @@ export class LocalModel implements Model {
                 )
 
             } else {
-                const debug = this.plugin_settings.debug;
-
                 this.client.isReady({}, (err, reply) => {
                     if (err) {
-                        if (debug) console.log(`latex_ocr: isReady call failed:`, err);
+                        console.debug(`latex_ocr: isReady call failed:`, err);
                         resolve({ status: Status.Loading, msg: "Server is not ready yet" });
                         return;
                     }
@@ -162,14 +144,15 @@ export class LocalModel implements Model {
                     // Validate server is fully loaded by checking config
                     this.client.getConfig({}, (configErr, config) => {
                         if (configErr) {
-                            if (debug) console.log(`latex_ocr: getConfig failed:`, configErr);
+                            console.debug(`latex_ocr: getConfig failed:`, configErr);
                             resolve({ status: Status.Loading, msg: "Server is loading models" });
                         } else {
-                            if (debug) console.log(`latex_ocr: Server ready, config:`, config);
+                            console.debug(`latex_ocr: Server ready, config:`, config);
                             resolve({ status: Status.Ready, msg: "Server ready" });
                         }
                     });
                 });
+            }
         }));
     }
 
@@ -183,14 +166,10 @@ export class LocalModel implements Model {
 
                 pythonProcess.stdout.on('data', data => {
                     const [prog, version] = data.toString().split(" ")
-                    if (this.plugin_settings.debug) {
-                        console.log(`${prog} version ${version} (min version: ${SCRIPT_VERSION})`)
-                    }
+                    console.log(`${prog} version ${version} (min version: ${SCRIPT_VERSION})`)
                 })
                 pythonProcess.stderr.on('data', data => {
-                    if (this.plugin_settings.debug) {
-                        console.error(data.toString())
-                    }
+                    console.error(data.toString())
                 })
 
                 pythonProcess.on('close', code => {
@@ -223,9 +202,7 @@ export class LocalModel implements Model {
                 "--port", port,
                 "--cache_dir", this.plugin_settings.cacheDirPath]
 
-            if (this.plugin_settings.debug) {
-                console.log(`Starting server with the following command: \n${this.plugin_settings.pythonPath, args}`)
-            }
+            console.debug(`Starting server with the following command: \n${this.plugin_settings.pythonPath, args}`)
             const pythonProcess = spawn(this.plugin_settings.pythonPath, args)
 
             pythonProcess.on('spawn', () => {
@@ -240,17 +217,13 @@ export class LocalModel implements Model {
                 if (data.toString().toLowerCase().includes("downloading")) {
                     this.last_download_update = data.toString()
                 }
-                if (this.plugin_settings.debug) {
-                    console.log(`latex_ocr_server: ${data.toString()}`)
-                }
+                console.debug(`latex_ocr_server: ${data.toString()}`)
             })
             pythonProcess.stderr.on('data', data => {
                 if (data.toString().toLowerCase().includes("downloading")) {
                     this.last_download_update = data.toString()
                 }
-                if (this.plugin_settings.debug) {
-                    console.error(`latex_ocr_server: ${data.toString()}`)
-                }
+                console.debug(`latex_ocr_server: ${data.toString()}`)
             })
 
             pythonProcess.on('close', code => {
