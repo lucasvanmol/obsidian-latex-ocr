@@ -65,6 +65,8 @@ The status bar at the bottom will indicate the status of the server.
 | LatexOCR 🌐 | downloading model  |
 | LatexOCR ❌ | server unreachable |
 
+If the server is online but you encouter an error getting a response from the server, ensure that the Cache dir filepath is pointing to a valid folder and that the model has successfully been saved there. 
+
 ### GPU support
 
 You can check if GPU support is working by running:
