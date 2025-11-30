@@ -83,9 +83,7 @@ export default class ApiModel implements Model {
                 })
             }
 
-            if (this.settings.debug) {
-                console.log(`latex_ocr: ${JSON.stringify(response)}`)
-            }
+            console.debug(`latex_ocr: ${JSON.stringify(response)}`)
             setTimeout(() => notice.hide(), 1000)
 
             const latex = response.generated_text

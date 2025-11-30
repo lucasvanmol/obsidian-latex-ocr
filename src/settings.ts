@@ -112,15 +112,10 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             })
         }
 
-        new Setting(containerEl)
-            .setName("Debug mode")
-            .setDesc("Enables debug logging in the console.")
-            .addToggle(toggle => toggle
-                .setValue(this.plugin.settings.debug).onChange(
-                    async (value) => {
-                        this.plugin.settings.debug = value
-                        await this.plugin.saveSettings()
-                    }));
+        containerEl.createEl("p", {
+            text: "Debug logging: To enable verbose logging, open the developer console (Ctrl+Shift+I) and set the log level to include 'Verbose' messages.",
+            cls: "setting-item-description"
+        });
 
 
         const API_CONF_TEXT = "HuggingFace API Configuration"
