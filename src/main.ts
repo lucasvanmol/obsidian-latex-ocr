@@ -165,6 +165,17 @@ export default class LatexOCR extends Plugin {
 			}
 		});
 
+		// Add Stop server command to command palette
+		this.addCommand({
+			id: 'stop-latexocr-server',
+			name: 'Stop LatexOCR Server',
+			callback: async () => {
+				if (this.model) {
+					this.model.unload();
+				}
+			}
+		});
+
 		// Status bar, will automatically start based on settings
 		this.statusBar = new StatusBar(this)
 	}

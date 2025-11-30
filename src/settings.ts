@@ -192,10 +192,10 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 }))
 
         const serverStatus = new Setting(containerEl)
-            .setName('Server status')
+            .setName('Server control')
             .setDesc("LatexOCR runs a python script in the background that can process OCR requests. \
-				Use these settings to check it's status, or restart it. \
-				Note that restarting can take a few seconds. If the model isn't cached, it needs to be downloaded first (~1.4 GB).")
+				Use these settings to check it's status, start, or stop it. \
+				Note that starting can take a few seconds. If the model isn't cached, it needs to be downloaded first (~1.4 GB).")
             .addButton(button => button
                 .setButtonText("Check status")
                 .setCta()
@@ -211,6 +211,16 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         this.plugin.model.unload()
                         this.plugin.model.load()
                         this.plugin.model.start()
+                    }
+                }))
+            .addButton(button => button
+                .setButtonText("Stop server")
+                .onClick(async (evt) => {
+                    if (this.plugin.model) {
+                        this.plugin.model.unload()
+                        new Notice("⚙️ Server stopped", 2000);
+                    } else {
+                        new Notice("❌ No server found to stop", 5000);
                     }
                 }))
 

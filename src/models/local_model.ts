@@ -32,9 +32,23 @@ export class LocalModel implements Model {
     }
 
     unload() {
-        // shutdown server
+        this.killServer()
+    }
+
+    // Kill the server process forcefully
+    private killServer() {
         if (this.serverProcess) {
-            this.serverProcess.kill()
+            console.log(`latex_ocr_server: killing server process (PID: ${this.serverProcess.pid})`)
+
+            try {
+                this.serverProcess.kill('SIGKILL');
+            } catch (err) {
+                if (this.plugin_settings.debug) {
+                    console.log(`latex_ocr_server: error killing process: ${err}`)
+                }
+            }
+
+            this.serverProcess = undefined as unknown as ChildProcess;
         }
     }
 
