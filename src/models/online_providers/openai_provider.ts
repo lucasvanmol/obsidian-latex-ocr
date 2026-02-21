@@ -106,7 +106,7 @@ export default class OpenAIProvider implements Model {
                 }, 1000); // Update every 1s
             }
 
-            const serviceTier = (this.settings.openAiServiceTier || "flex") as "flex" | "auto" | "default";
+            const serviceTier = (this.settings.openAiServiceTier || "default") as "flex" | "default";
             const response = await this.client.chat.completions.create({
                 model: this.settings.openAiModel || "gpt-5-nano",
                 messages: [

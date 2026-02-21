@@ -194,6 +194,23 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         const HfApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
 
         // OpenAI API Key Settings
+
+        // Cost Warning
+        const openAiCostWarningDesc = document.createDocumentFragment();
+        openAiCostWarningDesc.append(
+            "OpenAI API usage is not free. You will be charged based on the number of tokens processed. Typical costs are  ~$0.0001-0.0004 per image for simple equations. ~$0.001-0.003 per image for complex formulas. "
+        );
+        const openAiCostLink = document.createElement("a");
+        openAiCostLink.textContent = "Monitor your usage and set spending limits";
+        openAiCostLink.href = "https://platform.openai.com/account/limits";
+        openAiCostLink.target = "_blank";
+        openAiCostWarningDesc.appendChild(openAiCostLink);
+
+        const openAiCostWarning = new Setting(containerEl)
+            .setName('⚠️ WARNING: Usage Costs')
+            .setDesc(openAiCostWarningDesc);
+        
+        // API Settings Interface
         const OpenAiKeyDisplay = new Setting(containerEl)
             .setName('Current OpenAI API Key')
             .addText(text => text
@@ -266,11 +283,10 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         // OpenAI Service Tier Setting
         const openAiServiceTierSetting = new Setting(containerEl)
             .setName('Service Tier')
-            .setDesc('Flex tier is about 50% cheaper but might queue requests during peak times. \
-                Standard tier guarantees no queuing. If you experience delays, consider switching to standard.')
+            .setDesc('Flex tier is about 50% cheaper but might queue requests during peak times. Default tier guarantees no queuing. If you experience delays, consider switching to default.')
             .addDropdown(dd => dd
                 .addOption('flex', 'Flex')
-                .addOption('standard', 'Standard')
+                .addOption('default', 'Default')
                 .setValue(this.plugin.settings.openAiServiceTier)
                 .onChange(async (value) => {
                     this.plugin.settings.openAiServiceTier = value
@@ -278,7 +294,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                 })
             )
 
-        const OpenAiApiSettings = [openAiKeyInput.settingEl, OpenAiKeyDisplay.settingEl, openAiModelSetting.settingEl, openAiMaxTokensSetting.settingEl, openAiServiceTierSetting.settingEl]
+        const OpenAiApiSettings = [openAiKeyInput.settingEl, OpenAiKeyDisplay.settingEl, openAiCostWarning.settingEl, openAiModelSetting.settingEl, openAiMaxTokensSetting.settingEl, openAiServiceTierSetting.settingEl]
 
         const ApiSettings = [...HfApiSettings, ...OpenAiApiSettings, apiProviderSetting.settingEl]
 

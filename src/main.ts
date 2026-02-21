@@ -75,7 +75,7 @@ const DEFAULT_SETTINGS: LatexOCRSettings = {
 	openAiApiKey: "",
 	openAiModel: "gpt-5-nano",
 	openAiMaxTokens: 2000,
-	openAiServiceTier: "standard",
+	openAiServiceTier: "default",
 	obfuscatedKey: "",
 	obfuscatedOpenAiKey: "",
 }
