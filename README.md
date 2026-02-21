@@ -6,7 +6,7 @@
 > ⚠️ **Inference API issues** ⚠️
 > 
 > The HuggingFace Inference API is not working as Hugging Face is currently **not supporting image-to-text models**. Check the [issue here](https://github.com/lucasvanmol/obsidian-latex-ocr/issues/37) for updates.
-> Running locally is still supported & working.
+> Running locally is still supported & working and OpenAI's API is unaffected, so you can still use those options.
 
 
 
@@ -16,12 +16,13 @@ Generate Latex equations from images and screenshots inside your vault.
 
 ## Features
 
+- Right click any image in your vault and choose "Generate LaTeX" to get the corresponding LaTeX code.
 - Paste LaTeX equations directly into your notes using an image from your clipboard with a custom command (bind it to a hotkey like `Ctrl+Alt+V` if you use it often!).
 - Transform images in your vault to LaTeX equations by choosing a new "Generate Latex" option in their context menu.
-- Use either the HuggingFace [inference API](#using-inference-api) or [run locally](#run-locally)
+- Use either the HuggingFace [inference API](#using-huggingface-inference-api), using OpenAI [API](#using-openai-api), or [run locally](#run-locally)
 
 
-## Using Inference API
+## Using HuggingFace Inference API
 
 By default, this plugin uses the HuggingFace inference API. Here's how you get your API key:
 - Create an account or login at https://huggingface.co
@@ -31,6 +32,17 @@ By default, this plugin uses the HuggingFace inference API. Here's how you get y
 ### Limitations
 - The inference API is a free service by huggingface, and as such it requires some time to be provisioned. Subsequent requests should be a lot faster.
 - If you would be interested in a low-cost subscription-based service that would get rid of this annoying waiting period, please react to [the related issue here](https://github.com/lucasvanmol/obsidian-latex-ocr/issues/13). I will consider building it if there is enough demand to pay for the server costs.
+
+## Using OpenAI API
+You can also use OpenAI's API to generate LaTeX code. This will require you to pay for usage: Typical costs are  ~$0.0001-0.0004 per image for simple equations. ~$0.001-0.003 per image for complex formulas. To use it, you need to:
+- Create an account or login at https://platform.openai.com
+- Create an new service key in the [API Keys section](https://platform.openai.com/account/api-keys) of your OpenAI account. Again, I recommend creating a key specifically for this plugin.
+- Add funds to your OpenAI account. Sometimes OpenAI offers a free trial with some credits, but after that you will need to add a payment method and add funds to your account to continue using the API.
+- After enabling the plugin in Obsidian, head to the Latex OCR settings tab, select "OpenAI API" as the provider, and input the API key you generated.
+
+### Limitations
+- OpenAI's API is a paid service, so you will need to add funds to your account to use it.
+- Since we are using the general gpt-5 models it can be quite slow especially for large complex formulas.
 
 ## Run Locally
 

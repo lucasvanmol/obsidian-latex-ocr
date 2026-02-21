@@ -103,7 +103,7 @@ export default class HuggingFaceProvider implements Model {
         }
 
         try {
-            const response = await requestUrl({
+            await requestUrl({
                 url: "https://huggingface.co/api/whoami-v2",
                 headers: { Authorization: `Bearer ${this.apiKey}` },
                 method: "GET",

@@ -60,7 +60,7 @@ export default class OpenAIProvider implements Model {
     // Implementation taken from:
     // https://developers.openai.com/api/docs/guides/images-vision?format=base64-encoded#analyze-images
 
-    async imgfileToLatexDetailed(filepath: string, showNotice: boolean = true): Promise<DetailedOCRResult> {
+    async imgfileToLatexDetailed(filepath: string, showNotice = true): Promise<DetailedOCRResult> {
         const file = path.parse(filepath)
         const notice = showNotice ? new Notice(`⚙️ Generating Latex for ${file.base}...`, 0) : null;
 
@@ -183,7 +183,7 @@ export default class OpenAIProvider implements Model {
             } else {
                 throw new Error(`Malformed response from OpenAI: ${JSON.stringify(response)}`)
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Stop the progress updates if still running
             if (progressInterval) {
                 clearInterval(progressInterval);
@@ -191,22 +191,25 @@ export default class OpenAIProvider implements Model {
 
             console.error('OpenAI API error:', error)
 
+            // Type guard for error object
+            const err = error as { status?: number; code?: string; message?: string }
+
             // Determine error message
             let errorMsg: string
-            if (error.status === 429 || error.code === 'rate_limit_exceeded') {
+            if (err.status === 429 || err.code === 'rate_limit_exceeded') {
                 errorMsg = "❌ Rate limit exceeded. Add credits at platform.openai.com/account/billing or wait and try again."
-            } else if (error.status === 402 || error.code === 'insufficient_quota') {
+            } else if (err.status === 402 || err.code === 'insufficient_quota') {
                 errorMsg = "❌ Insufficient credits. Add credits at platform.openai.com/account/billing"
-            } else if (error.status === 401 || error.code === 'invalid_api_key') {
+            } else if (err.status === 401 || err.code === 'invalid_api_key') {
                 errorMsg = "❌ Invalid API key. Check your OpenAI API key in settings"
-            } else if (error.status === 400 || error.code === 'invalid_request_error') {
-                errorMsg = `❌ Bad request: ${error.message || 'Image format may not be supported'}`
-            } else if (error.status >= 500) {
+            } else if (err.status === 400 || err.code === 'invalid_request_error') {
+                errorMsg = `❌ Bad request: ${err.message || 'Image format may not be supported'}`
+            } else if (err.status && err.status >= 500) {
                 errorMsg = "❌ OpenAI service unavailable. Try again later"
-            } else if (error.message?.includes('Token limit exceeded')) {
+            } else if (err.message?.includes('Token limit exceeded')) {
                 throw error
             } else {
-                errorMsg = `❌ Error: ${error.message || 'Unknown error'}`
+                errorMsg = `❌ Error: ${err.message || 'Unknown error'}`
             }
 
             if (notice) {
@@ -232,18 +235,19 @@ export default class OpenAIProvider implements Model {
             // Test the API key by listing models
             await this.client.models.list()
             return { status: Status.Ready, msg: "OpenAI API key is working" }
-        } catch (error: any) {
-            if (error.status === 401 || error.code === 'invalid_api_key') {
+        } catch (error: unknown) {
+            const err = error as { status?: number; code?: string; message?: string }
+            if (err.status === 401 || err.code === 'invalid_api_key') {
                 return { status: Status.Misconfigured, msg: "Unauthorized: check your OpenAI API key in the settings" }
-            } else if (error.status === 429 || error.code === 'rate_limit_exceeded') {
+            } else if (err.status === 429 || err.code === 'rate_limit_exceeded') {
                 return { status: Status.Misconfigured, msg: "Rate limit exceeded. Check your usage at platform.openai.com/usage" }
-            } else if (error.status === 402 || error.code === 'insufficient_quota') {
+            } else if (err.status === 402 || err.code === 'insufficient_quota') {
                 return { status: Status.Misconfigured, msg: "Insufficient credits. Add credits at platform.openai.com/account/billing" }
-            } else if (error.status >= 500) {
+            } else if (err.status && err.status >= 500) {
                 return { status: Status.Unreachable, msg: "OpenAI service temporarily unavailable" }
             } else {
                 console.error(error)
-                return { status: Status.Unreachable, msg: `Error: ${error.message || 'Unknown error'}` }
+                return { status: Status.Unreachable, msg: `Error: ${err.message || 'Unknown error'}` }
             }
         }
     }
