@@ -75,8 +75,17 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         this.plugin.model = new ApiModel(this.plugin.settings)
                         configuration_text.setText(API_CONF_TEXT)
 
-                        ApiSettings.forEach(e => e.show())
                         LocalSettings.forEach(e => e.hide())
+                        apiProviderSetting.settingEl.show()
+
+                        // Show only the relevant API key settings based on provider
+                        if (this.plugin.settings.apiProvider === 'huggingface') {
+                            HfApiSettings.forEach(e => e.show())
+                            OpenAiApiSettings.forEach(e => e.hide())
+                        } else {
+                            HfApiSettings.forEach(e => e.hide())
+                            OpenAiApiSettings.forEach(e => e.show())
+                        }
                     }
                     this.plugin.model.load()
 
@@ -117,7 +126,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             .setDesc("To enable verbose logging, open the developer console (Ctrl+Shift+I) and set the log level to include 'Verbose' messages.");
 
 
-        const API_CONF_TEXT = "HuggingFace API Configuration"
+        const API_CONF_TEXT = "API Configuration"
         const LOCAL_CONF_TEXT = "Local Python Model Configuration"
         const configuration_text = containerEl.createEl("h5", { text: API_CONF_TEXT })
         if (this.plugin.settings.useLocalModel) {
@@ -126,6 +135,30 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
         ///// API MODEL SETTINGS /////
 
+        // API Provider choice Dropdown
+        const apiProviderSetting = new Setting(containerEl)
+            .setName('API Provider')
+            .setDesc('Choose which API provider to use for OCR processing.')
+            .addDropdown(dd => dd
+                .addOption('huggingface', 'HuggingFace')
+                .addOption('openai', 'OpenAI')
+                .setValue(this.plugin.settings.apiProvider)
+                .onChange(async (value) => {
+                    this.plugin.settings.apiProvider = value
+                    await this.plugin.saveSettings()
+
+                    // Show/hide appropriate API key settings
+                    if (value === 'huggingface') {
+                        HfApiSettings.forEach(e => e.show())
+                        OpenAiApiSettings.forEach(e => e.hide())
+                    } else {
+                        HfApiSettings.forEach(e => e.hide())
+                        OpenAiApiSettings.forEach(e => e.show())
+                    }
+                })
+            )
+
+        // HuggingFace API Key Settings
         const KeyDisplay = new Setting(containerEl)
             .setName('Current API Key')
             .addText(text => text
@@ -136,7 +169,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         apiKeyDesc.createEl("a", { text: "hugging face docs", href: "https://huggingface.co/docs/api-inference/quicktour#get-your-api-token" })
         apiKeyDesc.createSpan({ text: " on how to generate it." })
         const apiKeyInput = new Setting(containerEl)
-            .setName('Set API Key')
+            .setName('Set HuggingFace API Key')
             .setDesc(apiKeyDesc)
             .addText(text => text.inputEl.setAttr("type", "password"))
         apiKeyInput.addButton(btn =>
@@ -151,15 +184,50 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         key = value
                     }
 
-                    new Notice("🔧 Api key saved")
+                    new Notice("🔧 HuggingFace API key saved")
                     this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
                     this.plugin.settings.hfApiKey = key;
                     (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
                     await this.plugin.saveSettings()
                 }))
 
+        const HfApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
 
-        const ApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
+        // OpenAI API Key Settings
+        const OpenAiKeyDisplay = new Setting(containerEl)
+            .setName('Current OpenAI API Key')
+            .addText(text => text
+                .setPlaceholder(this.plugin.settings.obfuscatedOpenAiKey).setDisabled(true))
+
+        const openAiKeyDesc = new DocumentFragment()
+        openAiKeyDesc.textContent = "Find your OpenAI API key on the "
+        openAiKeyDesc.createEl("a", { text: "OpenAI API key page", href: "https://platform.openai.com/api-keys" })
+        const openAiKeyInput = new Setting(containerEl)
+            .setName('Set OpenAI API Key')
+            .setDesc(openAiKeyDesc)
+            .addText(text => text.inputEl.setAttr("type", "password"))
+        openAiKeyInput.addButton(btn =>
+            btn.setButtonText("Submit")
+                .setCta()
+                .onClick(async evt => {
+                    const value = (openAiKeyInput.components[0] as TextComponent).getValue()
+                    let key
+                    if (safeStorage.isEncryptionAvailable()) {
+                        key = safeStorage.encryptString(value)
+                    } else {
+                        key = value
+                    }
+
+                    new Notice("🔧 OpenAI API key saved")
+                    this.plugin.settings.obfuscatedOpenAiKey = obfuscateApiKey(value)
+                    this.plugin.settings.openAiApiKey = key;
+                    (OpenAiKeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedOpenAiKey)
+                    await this.plugin.saveSettings()
+                }))
+
+        const OpenAiApiSettings = [openAiKeyInput.settingEl, OpenAiKeyDisplay.settingEl]
+
+        const ApiSettings = [...HfApiSettings, ...OpenAiApiSettings, apiProviderSetting.settingEl]
 
 
         ///// LOCAL MODEL SETTINGS /////
@@ -270,6 +338,14 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             ApiSettings.forEach(e => e.hide())
         } else {
             LocalSettings.forEach(e => e.hide())
+            // Show only the relevant API key settings based on provider
+            if (this.plugin.settings.apiProvider === 'huggingface') {
+                HfApiSettings.forEach(e => e.show())
+                OpenAiApiSettings.forEach(e => e.hide())
+            } else {
+                HfApiSettings.forEach(e => e.hide())
+                OpenAiApiSettings.forEach(e => e.show())
+            }
         }
 
     }

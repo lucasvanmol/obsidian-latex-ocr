@@ -37,11 +37,20 @@ export interface LatexOCRSettings {
 	/** Use local model or HF API */
 	useLocalModel: boolean;
 
+	/** API provider: "huggingface" or "openai" */
+	apiProvider: string;
+
 	/** Hugging face API key */
 	hfApiKey: string | ArrayBuffer;
 
-	/** Obfuscated key shown in settings */
+	/** OpenAI API key */
+	openAiApiKey: string | ArrayBuffer;
+
+	/** Obfuscated HF key shown in settings */
 	obfuscatedKey: string;
+
+	/** Obfuscated OpenAI key shown in settings */
+	obfuscatedOpenAiKey: string;
 }
 
 const DEFAULT_SETTINGS: LatexOCRSettings = {
@@ -52,8 +61,11 @@ const DEFAULT_SETTINGS: LatexOCRSettings = {
 	startServerOnLoad: true,
 	showStatusBar: true,
 	useLocalModel: false,
+	apiProvider: 'huggingface',
 	hfApiKey: "",
+	openAiApiKey: "",
 	obfuscatedKey: "",
+	obfuscatedOpenAiKey: "",
 }
 
 // https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
