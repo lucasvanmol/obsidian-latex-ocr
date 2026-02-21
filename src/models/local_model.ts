@@ -5,6 +5,7 @@ import * as path from 'path'
 import { LatexOCRClient } from 'protos/latex_ocr';
 import * as grpc from '@grpc/grpc-js';
 import { Notice } from 'obsidian';
+import * as fs from 'fs';
 
 const IMG_EXTS = ["png", "jpg", "jpeg", "bmp", "dib", "eps", "gif", "ppm", "pbm", "pgm", "pnm", "webp"]
 const SCRIPT_VERSION = "0.1.0"
@@ -63,7 +64,6 @@ export class LocalModel implements Model {
             }
 
             // Check if file exists and is readable
-            const fs = require('fs')
             try {
                 if (!fs.existsSync(filepath)) {
                     reject(`Image file does not exist: ${filepath}`)

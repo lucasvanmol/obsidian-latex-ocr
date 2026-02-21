@@ -4,7 +4,17 @@
 
 This plugin uses [NormXU's nougat-latex-ocr](https://github.com/NormXU/nougat-latex-ocr) model, which is based on PyTorch. Massive thanks to them for providing the open source model.
 
-This plugin consists of two main parts. The first is [latex-ocr-server](https://github.com/lucasvanmol/latex-ocr-server), a python script that downloads and runs the model using huggingface transformers and pytorch. This script interfaces with the javascript plugin using protocol buffers, allowing the plugin to communicate and make requests to the python script.
+This plugin consists of two main parts. 
+
+### Local hosted model
+The first is [latex-ocr-server](https://github.com/lucasvanmol/latex-ocr-server), a python script that downloads and runs the model using huggingface transformers and pytorch. This script interfaces with the javascript plugin using protocol buffers, allowing the plugin to communicate and make requests to the python script.
+
+### Online hosted model
+#### HuggingFace Inference API
+The second is the option to use the HuggingFace inference API to run the model. The plugin sends requests to HuggingFace's servers, which run the model and return the results. <--- CURRENTLY NOT WORKING DUE TO HUGGINGFACE NOT SUPPORTING IMAGE-TO-TEXT MODELS, CHECK ISSUE #37 FOR UPDATES
+
+#### OpenAI API
+The third option is to use OpenAI's API to run the model. The plugin sends requests to OpenAI's servers, which run ask a general model to turn the image into latex and return the results.
 
 The reason for this is that loading the model takes some time. This setup allows the model to be loaded in the background on startup, making subsequent requests much faster.
 

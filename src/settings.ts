@@ -75,8 +75,17 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         this.plugin.model = new ApiModel(this.plugin.settings)
                         configuration_text.setText(API_CONF_TEXT)
 
-                        ApiSettings.forEach(e => e.show())
                         LocalSettings.forEach(e => e.hide())
+                        apiProviderSetting.settingEl.show()
+
+                        // Show only the relevant API key settings based on provider
+                        if (this.plugin.settings.apiProvider === 'huggingface') {
+                            HfApiSettings.forEach(e => e.show())
+                            OpenAiApiSettings.forEach(e => e.hide())
+                        } else {
+                            HfApiSettings.forEach(e => e.hide())
+                            OpenAiApiSettings.forEach(e => e.show())
+                        }
                     }
                     this.plugin.model.load()
 
@@ -117,7 +126,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             .setDesc("To enable verbose logging, open the developer console (Ctrl+Shift+I) and set the log level to include 'Verbose' messages.");
 
 
-        const API_CONF_TEXT = "HuggingFace API Configuration"
+        const API_CONF_TEXT = "API Configuration"
         const LOCAL_CONF_TEXT = "Local Python Model Configuration"
         const configuration_text = containerEl.createEl("h5", { text: API_CONF_TEXT })
         if (this.plugin.settings.useLocalModel) {
@@ -126,6 +135,30 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
 
         ///// API MODEL SETTINGS /////
 
+        // API Provider choice Dropdown
+        const apiProviderSetting = new Setting(containerEl)
+            .setName('API Provider')
+            .setDesc('Choose which API provider to use for OCR processing.')
+            .addDropdown(dd => dd
+                .addOption('huggingface', 'HuggingFace')
+                .addOption('openai', 'OpenAI')
+                .setValue(this.plugin.settings.apiProvider)
+                .onChange(async (value) => {
+                    this.plugin.settings.apiProvider = value
+                    await this.plugin.saveSettings()
+
+                    // Show/hide appropriate API key settings
+                    if (value === 'huggingface') {
+                        HfApiSettings.forEach(e => e.show())
+                        OpenAiApiSettings.forEach(e => e.hide())
+                    } else {
+                        HfApiSettings.forEach(e => e.hide())
+                        OpenAiApiSettings.forEach(e => e.show())
+                    }
+                })
+            )
+
+        // HuggingFace API Key Settings
         const KeyDisplay = new Setting(containerEl)
             .setName('Current API Key')
             .addText(text => text
@@ -136,7 +169,7 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
         apiKeyDesc.createEl("a", { text: "hugging face docs", href: "https://huggingface.co/docs/api-inference/quicktour#get-your-api-token" })
         apiKeyDesc.createSpan({ text: " on how to generate it." })
         const apiKeyInput = new Setting(containerEl)
-            .setName('Set API Key')
+            .setName('Set HuggingFace API Key')
             .setDesc(apiKeyDesc)
             .addText(text => text.inputEl.setAttr("type", "password"))
         apiKeyInput.addButton(btn =>
@@ -151,15 +184,119 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                         key = value
                     }
 
-                    new Notice("🔧 Api key saved")
+                    new Notice("🔧 HuggingFace API key saved")
                     this.plugin.settings.obfuscatedKey = obfuscateApiKey(value)
                     this.plugin.settings.hfApiKey = key;
                     (KeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedKey)
                     await this.plugin.saveSettings()
                 }))
 
+        const HfApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
 
-        const ApiSettings = [apiKeyInput.settingEl, KeyDisplay.settingEl]
+        // OpenAI API Key Settings
+
+        // Cost Warning
+        const openAiCostWarningDesc = document.createDocumentFragment();
+        openAiCostWarningDesc.append(
+            "OpenAI API usage is not free. You will be charged based on the number of tokens processed. Typical costs are  ~$0.0001-0.0004 per image for simple equations. ~$0.001-0.003 per image for complex formulas. "
+        );
+        const openAiCostLink = document.createElement("a");
+        openAiCostLink.textContent = "Monitor your usage and set spending limits";
+        openAiCostLink.href = "https://platform.openai.com/account/limits";
+        openAiCostLink.target = "_blank";
+        openAiCostWarningDesc.appendChild(openAiCostLink);
+
+        const openAiCostWarning = new Setting(containerEl)
+            .setName('⚠️ WARNING: Usage Costs')
+            .setDesc(openAiCostWarningDesc);
+        
+        // API Settings Interface
+        const OpenAiKeyDisplay = new Setting(containerEl)
+            .setName('Current OpenAI API Key')
+            .addText(text => text
+                .setPlaceholder(this.plugin.settings.obfuscatedOpenAiKey).setDisabled(true))
+
+        const openAiKeyDesc = new DocumentFragment()
+        openAiKeyDesc.textContent = "Find your OpenAI API key on the "
+        openAiKeyDesc.createEl("a", { text: "OpenAI API key page", href: "https://platform.openai.com/api-keys" })
+        const openAiKeyInput = new Setting(containerEl)
+            .setName('Set OpenAI API Key')
+            .setDesc(openAiKeyDesc)
+            .addText(text => text.inputEl.setAttr("type", "password"))
+        openAiKeyInput.addButton(btn =>
+            btn.setButtonText("Submit")
+                .setCta()
+                .onClick(async evt => {
+                    const value = (openAiKeyInput.components[0] as TextComponent).getValue()
+                    let key
+                    if (safeStorage.isEncryptionAvailable()) {
+                        key = safeStorage.encryptString(value)
+                    } else {
+                        key = value
+                    }
+
+                    new Notice("🔧 OpenAI API key saved")
+                    this.plugin.settings.obfuscatedOpenAiKey = obfuscateApiKey(value)
+                    this.plugin.settings.openAiApiKey = key;
+                    (OpenAiKeyDisplay.components[0] as TextComponent).setPlaceholder(this.plugin.settings.obfuscatedOpenAiKey)
+                    await this.plugin.saveSettings()
+                }))
+
+
+        // OpenAI Model Selection
+        //
+        //  Cost: For simple images both models cost approximately the same, but for complex images Nano becomes significantly cheaper (up to 10x). \
+        //  Speed: Mini is faster for simple images, but the difference decreases as complexity increases.\
+        //  Accuracy: Mini is more capable, especially for low resolution or complex images.
+        const openAiModelSetting = new Setting(containerEl)
+            .setName('OpenAI Model')
+            .setDesc('Choose which OpenAI model to use for OCR processing. For simpler images we recommend Mini, which is much faster for about the same cost.\
+                    For more complex images we recommend Nano, which can be up to 10x cheaper at about the same speed.\
+                    If you are working with low resolution, Mini might give better results.')
+            .addDropdown(dd => dd
+                .addOption('gpt-5-nano', 'GPT-5 Nano')
+                .addOption('gpt-5-mini', 'GPT-5 Mini')
+                .setValue(this.plugin.settings.openAiModel)
+                .onChange(async (value) => {
+                    this.plugin.settings.openAiModel = value
+                    await this.plugin.saveSettings()
+                })
+            )
+
+        // OpenAI Max Tokens Setting
+        const openAiMaxTokensSetting = new Setting(containerEl)
+            .setName('Max Completion Tokens')
+            .setDesc('Maximum number of tokens to generate in the response (100-100000). Makes sure you don\'t accidentally make a huge request. \
+                    1000 tokens costs about $0.0004 with Nano and $0.0017 with Mini.')
+            .addText(text => text
+                .setPlaceholder('20000')
+                .setValue(String(this.plugin.settings.openAiMaxTokens))
+                .onChange(async (value) => {
+                    const numValue = parseInt(value)
+                    if (!isNaN(numValue) && numValue >= 100 && numValue <= 100000) {
+                        this.plugin.settings.openAiMaxTokens = numValue
+                        await this.plugin.saveSettings()
+                    }
+                })
+            )
+
+        // OpenAI Service Tier Setting
+        const openAiServiceTierSetting = new Setting(containerEl)
+            .setName('Service Tier')
+            .setDesc('Flex tier is about 50% cheaper but might queue requests during peak times. Default tier guarantees no queuing. If you experience delays, consider switching to default.')
+            .addDropdown(dd => dd
+                .addOption('flex', 'Flex')
+                .addOption('default', 'Default')
+                .setValue(this.plugin.settings.openAiServiceTier)
+                .onChange(async (value) => {
+                    this.plugin.settings.openAiServiceTier = value
+                    await this.plugin.saveSettings()
+                })
+            )
+
+        const OpenAiApiSettings = [openAiKeyInput.settingEl, OpenAiKeyDisplay.settingEl, openAiCostWarning.settingEl, openAiModelSetting.settingEl, openAiMaxTokensSetting.settingEl, openAiServiceTierSetting.settingEl]
+
+        const ApiSettings = [...HfApiSettings, ...OpenAiApiSettings, apiProviderSetting.settingEl]
 
 
         ///// LOCAL MODEL SETTINGS /////
@@ -270,6 +407,14 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
             ApiSettings.forEach(e => e.hide())
         } else {
             LocalSettings.forEach(e => e.hide())
+            // Show only the relevant API key settings based on provider
+            if (this.plugin.settings.apiProvider === 'huggingface') {
+                HfApiSettings.forEach(e => e.show())
+                OpenAiApiSettings.forEach(e => e.hide())
+            } else {
+                HfApiSettings.forEach(e => e.hide())
+                OpenAiApiSettings.forEach(e => e.show())
+            }
         }
 
     }
