@@ -46,6 +46,15 @@ export interface LatexOCRSettings {
 	/** OpenAI API key */
 	openAiApiKey: string | ArrayBuffer;
 
+	/** OpenAI model to use */
+	openAiModel: string;
+
+	/** OpenAI max completion tokens */
+	openAiMaxTokens: number;
+
+	/** OpenAI service tier: "flex" or "standard" */
+	openAiServiceTier: string;
+
 	/** Obfuscated HF key shown in settings */
 	obfuscatedKey: string;
 
@@ -64,6 +73,9 @@ const DEFAULT_SETTINGS: LatexOCRSettings = {
 	apiProvider: 'huggingface',
 	hfApiKey: "",
 	openAiApiKey: "",
+	openAiModel: "gpt-5-nano",
+	openAiMaxTokens: 2000,
+	openAiServiceTier: "standard",
 	obfuscatedKey: "",
 	obfuscatedOpenAiKey: "",
 }

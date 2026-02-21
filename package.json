@@ -27,6 +27,7 @@
 		"@huggingface/inference": "^2.6.4",
 		"@xenova/transformers": "^2.7.0",
 		"clipboardy": "^4.0.0",
+		"openai": "^6.22.0",
 		"ts-proto": "^1.165.0"
 	}
 }

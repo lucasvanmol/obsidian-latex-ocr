@@ -225,7 +225,60 @@ export default class LatexOCRSettingsTab extends PluginSettingTab {
                     await this.plugin.saveSettings()
                 }))
 
-        const OpenAiApiSettings = [openAiKeyInput.settingEl, OpenAiKeyDisplay.settingEl]
+
+        // OpenAI Model Selection
+        //
+        //  Cost: For simple images both models cost approximately the same, but for complex images Nano becomes significantly cheaper (up to 10x). \
+        //  Speed: Mini is faster for simple images, but the difference decreases as complexity increases.\
+        //  Accuracy: Mini is more capable, especially for low resolution or complex images.
+        const openAiModelSetting = new Setting(containerEl)
+            .setName('OpenAI Model')
+            .setDesc('Choose which OpenAI model to use for OCR processing. For simpler images we recommend Mini, which is much faster for about the same cost.\
+                    For more complex images we recommend Nano, which can be up to 10x cheaper at about the same speed.\
+                    If you are working with low resolution, Mini might give better results.')
+            .addDropdown(dd => dd
+                .addOption('gpt-5-nano', 'GPT-5 Nano')
+                .addOption('gpt-5-mini', 'GPT-5 Mini')
+                .setValue(this.plugin.settings.openAiModel)
+                .onChange(async (value) => {
+                    this.plugin.settings.openAiModel = value
+                    await this.plugin.saveSettings()
+                })
+            )
+
+        // OpenAI Max Tokens Setting
+        const openAiMaxTokensSetting = new Setting(containerEl)
+            .setName('Max Completion Tokens')
+            .setDesc('Maximum number of tokens to generate in the response (100-100000). Makes sure you don\'t accidentally make a huge request. \
+                    1000 tokens costs about $0.0004 with Nano and $0.0017 with Mini.')
+            .addText(text => text
+                .setPlaceholder('20000')
+                .setValue(String(this.plugin.settings.openAiMaxTokens))
+                .onChange(async (value) => {
+                    const numValue = parseInt(value)
+                    if (!isNaN(numValue) && numValue >= 100 && numValue <= 100000) {
+                        this.plugin.settings.openAiMaxTokens = numValue
+                        await this.plugin.saveSettings()
+                    }
+                })
+            )
+
+        // OpenAI Service Tier Setting
+        const openAiServiceTierSetting = new Setting(containerEl)
+            .setName('Service Tier')
+            .setDesc('Flex tier is about 50% cheaper but might queue requests during peak times. \
+                Standard tier guarantees no queuing. If you experience delays, consider switching to standard.')
+            .addDropdown(dd => dd
+                .addOption('flex', 'Flex')
+                .addOption('standard', 'Standard')
+                .setValue(this.plugin.settings.openAiServiceTier)
+                .onChange(async (value) => {
+                    this.plugin.settings.openAiServiceTier = value
+                    await this.plugin.saveSettings()
+                })
+            )
+
+        const OpenAiApiSettings = [openAiKeyInput.settingEl, OpenAiKeyDisplay.settingEl, openAiModelSetting.settingEl, openAiMaxTokensSetting.settingEl, openAiServiceTierSetting.settingEl]
 
         const ApiSettings = [...HfApiSettings, ...OpenAiApiSettings, apiProviderSetting.settingEl]
 
